@@ -5,7 +5,7 @@ An Obsidian plugin that displays folder contents in a Pinterest-like masonry lay
 ## Usage
 
 - You can use folders to view it's content as masonry tiles (call them items). You work with actual files it this case.
-- You can create a pin boards and add any files to it, and view as masonry tiles (call them pins). You work with only a record in favorite-like-collection, not files itself.
+- You can create a pin boards and pin any files to it, and view as masonry tiles (call them pins). You work with only a record in collection, not files itself.
 - You can add tags to items/pins.
 - To turn folder in to a masonry layout right-click on a folder → **Enable Masonry View**. You will see a tile icon appear next to the folder name (call them a masonry folder).
 - Click on a masonry folder label to view it's content, click on foldout triangle to open/close folder. Double click on label also work as foldout.
@@ -18,7 +18,11 @@ An Obsidian plugin that displays folder contents in a Pinterest-like masonry lay
 - Right-click on items/pins for context menus and quick actions
 - Settings: use plugin settings to customize
 
-![screen1](images/screen1.png)
-![screen2](images/screen2.png)
-![screen2](images/screen3.png)
-![options](images/options.png)
+---
+  
+<p align="center">
+  <img src="images/screen1.jpg">
+  <img src="images/screen2.jpg">
+  <img src="images/screen3.jpg">
+  <img src="images/options.jpg">
+</p>
