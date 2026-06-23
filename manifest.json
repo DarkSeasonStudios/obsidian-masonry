@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-masonry",
+  "name": "Masonry View",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Pinterest-like masonry layout for folders in Obsidian",
+  "author": "Masonry Plugin",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

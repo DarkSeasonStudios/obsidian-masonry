@@ -1,0 +1,612 @@
+/* ── masonry root ─────────────────────────────────────────── */
+.masonry-root {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	--masonry-gap: 12px;
+	--masonry-column-width: 220px;
+}
+
+/* ── header ──────────────────────────────────────────────── */
+.masonry-header {
+	flex-shrink: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.masonry-hrow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	flex-wrap: wrap;
+}
+
+.masonry-nav {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.masonry-nav-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1;
+	user-select: none;
+}
+.masonry-nav-btn:hover:not(.masonry-nav-disabled) {
+	background: var(--background-modifier-hover);
+}
+.masonry-nav-disabled {
+	opacity: 0.35;
+	cursor: default;
+	pointer-events: none;
+}
+
+.masonry-search {
+	flex: 1 1 160px;
+	min-width: 100px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.masonry-search-icon {
+	display: inline-flex;
+	align-items: center;
+	opacity: .6;
+	flex-shrink: 0;
+}
+.masonry-search-input {
+	flex: 1;
+	min-width: 0;
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+}
+.masonry-search-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.masonry-path {
+	font-size: 12px;
+	color: var(--text-muted);
+	flex: 0 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 220px;
+}
+
+.masonry-actions {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+.masonry-action-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+}
+.masonry-action-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* ── tag bar (row 2) ─────────────────────────────────────── */
+.masonry-tag-bar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 12px 6px;
+	flex-wrap: wrap;
+	background: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+}
+.masonry-tag-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	font-weight: 600;
+	margin-right: 2px;
+	flex-shrink: 0;
+}
+.masonry-tag-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: center;
+	flex: 1;
+}
+.masonry-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 11px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: var(--tag-background);
+	color: var(--tag-color);
+	white-space: nowrap;
+}
+.masonry-chip-x {
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1;
+	font-weight: 700;
+	color: var(--text-muted);
+	margin-left: 2px;
+}
+.masonry-chip-x:hover {
+	color: var(--text-normal);
+}
+.masonry-tag-bar .masonry-tag-input {
+	flex: 0 1 120px;
+	min-width: 80px;
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 12px;
+	height: 22px;
+}
+.masonry-tag-bar .masonry-tag-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+.masonry-tag-apply {
+	font-size: 11px;
+	padding: 2px 10px;
+	height: 22px;
+	border: 1px solid var(--interactive-accent);
+	border-radius: 3px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+.masonry-tag-apply:hover {
+	opacity: 0.9;
+}
+
+/* ── tag cloud ────────────────────────────────────────────── */
+.masonry-tag-cloud {
+	position: absolute;
+	top: 100%;
+	right: 12px;
+	z-index: 100;
+	min-width: 200px;
+	max-width: 320px;
+	max-height: 300px;
+	overflow-y: auto;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+	padding: 12px;
+}
+.masonry-tc-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 8px;
+}
+.masonry-tc-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+}
+.masonry-tc-tag {
+	cursor: pointer;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: var(--tag-background);
+	color: var(--tag-color);
+	transition: background 0.15s;
+	white-space: nowrap;
+}
+.masonry-tc-tag:hover {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+.masonry-tc-empty {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+/* position relative for absolute tag cloud positioning */
+.masonry-header {
+	position: relative;
+}
+
+/* ── grid wrapper ────────────────────────────────────────── */
+.masonry-grid-wrapper {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--masonry-gap);
+}
+.masonry-empty {
+	padding: 40px 20px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+/* ── masonry CSS-columns layout ──────────────────────────── */
+.masonry-grid {
+	column-count: 4;
+	column-gap: var(--masonry-gap);
+}
+@media (max-width: 1200px) { .masonry-grid { column-count: 3; } }
+@media (max-width: 900px)  { .masonry-grid { column-count: 2; } }
+@media (max-width: 600px)  { .masonry-grid { column-count: 1; } }
+
+/* ── folder row ─────────────────────────────────────────── */
+.masonry-folders-row {
+	display: grid;
+	grid-template-columns: repeat(var(--masonry-folder-count, 8), 1fr);
+	padding-bottom: 0;
+}
+.masonry-folders-row .masonry-card.masonry-folder-card {
+	aspect-ratio: 3 / 4;
+}
+
+.masonry-card {
+	break-inside: avoid;
+	margin-bottom: var(--masonry-gap);
+	border: 2px solid transparent;
+	border-radius: 8px;
+	overflow: hidden;
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: border-color 0.15s, box-shadow 0.15s;
+	user-select: none;
+}
+.masonry-card:hover {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.masonry-card.masonry-selected {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-tint);
+}
+
+/* file explorer pin-board drop highlight */
+.nav-file-title.masonry-drop-file-exp {
+	background: var(--interactive-accent-hover) !important;
+	border-radius: 4px;
+}
+
+/* item header — always visible icon + name (folders & notes) */
+.masonry-item-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 10px;
+	font-size: 13px;
+	font-weight: 600;
+}
+.masonry-item-icon {
+	opacity: 0.55;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+}
+.masonry-item-icon svg {
+	width: 16px;
+	height: 16px;
+}
+.masonry-item-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* drag over */
+.masonry-card.masonry-dragging {
+	opacity: 0.4;
+}
+
+/* drop target (pin board) */
+.masonry-card.masonry-drop-board {
+	border-color: var(--color-yellow);
+	box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.35);
+}
+
+/* ── card content ────────────────────────────────────────── */
+.masonry-thumb {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	background: var(--background-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 60px;
+}
+.masonry-img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.masonry-placeholder {
+	font-size: 28px;
+	padding: 16px 0;
+}
+
+/* note preview — rendered markdown */
+.masonry-note-preview {
+	padding: 10px 12px;
+	font-size: var(--masonry-note-font-size, 12px);
+	line-height: 1.5;
+	color: var(--text-muted);
+	width: 100%;
+	word-break: break-word;
+}
+.masonry-note-preview > * {
+	margin: 0;
+}
+.masonry-note-preview p,
+.masonry-note-preview ul,
+.masonry-note-preview ol,
+.masonry-note-preview blockquote,
+.masonry-note-preview pre {
+	margin: 0 0 4px;
+}
+.masonry-note-preview ul,
+.masonry-note-preview ol {
+	padding-left: 16px;
+}
+.masonry-note-preview code {
+	font-size: 11px;
+	padding: 0 3px;
+	background: var(--code-background);
+	border-radius: 2px;
+}
+.masonry-note-preview pre code {
+	padding: 4px 6px;
+	display: block;
+}
+.masonry-note-preview img {
+	display: none;
+}
+.masonry-note-empty {
+	color: var(--text-faint);
+	font-style: italic;
+	text-align: center;
+}
+
+/* folder card — fixed aspect ratio */
+.masonry-card.masonry-folder-card {
+	aspect-ratio: 3 / 4;
+}
+.masonry-card.masonry-folder-card .masonry-item-header {
+	padding-bottom: 4px;
+}
+.masonry-card.masonry-folder-card .masonry-thumb {
+	background: var(--background-secondary-alt);
+}
+
+/* note card — flex column so .masonry-thumb fills available height */
+.masonry-card.masonry-note-card {
+	display: flex;
+	flex-direction: column;
+	min-height: var(--masonry-note-min-height);
+	max-height: var(--masonry-note-max-height);
+}
+
+.masonry-card.masonry-note-card .masonry-item-header {
+	flex-shrink: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.masonry-card.masonry-note-card .masonry-thumb {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	padding-bottom: 8px;
+}
+
+.masonry-label {
+	padding: 6px 10px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.masonry-tags {
+	padding: 6px 10px 8px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	background: var(--background-secondary);
+}
+.masonry-tag {
+	font-size: 12px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	background: var(--tag-background);
+	color: var(--tag-color);
+}
+.masonry-tag-more {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+/* ── image viewer modal ──────────────────────────────────── */
+.masonry-image-viewer {
+	padding: 0 !important;
+	background: rgba(0, 0, 0, 0.92);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	position: relative;
+}
+.masonry-iv-container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	width: 100%;
+	padding: 20px;
+	overflow: hidden;
+}
+.masonry-iv-img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+	border-radius: 4px;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+.masonry-iv-nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 48px;
+	color: rgba(255, 255, 255, 0.7);
+	cursor: pointer;
+	padding: 12px 18px;
+	user-select: none;
+	transition: color 0.15s, background 0.15s;
+	border-radius: 6px;
+	line-height: 1;
+}
+.masonry-iv-nav:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.12);
+}
+.masonry-iv-nav-left  { left: 12px; }
+.masonry-iv-nav-right { right: 12px; }
+.masonry-iv-hidden    { display: none; }
+
+.masonry-iv-bottom {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 20px;
+	width: 100%;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.masonry-iv-caption {
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 13px;
+}
+.masonry-iv-close {
+	background: rgba(255, 255, 255, 0.12);
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 4px;
+	padding: 4px 14px;
+	cursor: pointer;
+	font-size: 13px;
+}
+.masonry-iv-close:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── tag-assign modal ───────────────────────────────────── */
+.masonry-tag-modal {
+	padding: 20px;
+}
+.masonry-tag-modal h2 {
+	margin: 0 0 12px;
+	font-size: 16px;
+}
+.masonry-tag-modal .masonry-tag-input {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	margin-bottom: 12px;
+}
+.masonry-tag-modal .masonry-tag-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+.masonry-tag-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+/* ── pin-select modal ────────────────────────────────────── */
+.masonry-pin-modal {
+	padding: 20px;
+}
+.masonry-pin-modal h2 {
+	margin: 0 0 12px;
+	font-size: 18px;
+}
+.masonry-pin-list {
+	max-height: 300px;
+	overflow-y: auto;
+}
+.masonry-pin-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+.masonry-pin-row span {
+	font-size: 14px;
+}
+.masonry-pin-row button {
+	font-size: 12px;
+	padding: 2px 12px;
+}
+.masonry-pin-create {
+	margin-top: 12px;
+}
+.masonry-pin-create h3 {
+	margin: 0 0 8px;
+	font-size: 15px;
+}
+.masonry-pin-name-input {
+	width: 100%;
+	padding: 6px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	margin-bottom: 8px;
+}
+.masonry-pin-name-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
