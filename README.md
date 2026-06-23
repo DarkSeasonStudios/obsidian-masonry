@@ -18,4 +18,7 @@ An Obsidian plugin that displays folder contents in a Pinterest-like masonry lay
 - Right-click on items/pins for context menus and quick actions
 - Settings: use plugin settings to customize
 
-
+![screen1](images/screen1.png)
+![screen2](images/screen2.png)
+![screen2](images/screen3.png)
+![options](images/options.png)

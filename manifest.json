@@ -1,10 +1,10 @@
 {
   "id": "obsidian-masonry",
-  "name": "Masonry View",
+  "name": "Obsidian Masonry",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "Pinterest-like masonry layout for folders in Obsidian",
-  "author": "Masonry Plugin",
-  "authorUrl": "",
+  "description": "Pinterest-like masonry layout for folders in Obsidian, pin-boards, tags and such",
+  "author": "Vitaly Maltsev",
+  "authorUrl": "https://github.com/DarkSeasonStudios",
   "isDesktopOnly": false
 }
