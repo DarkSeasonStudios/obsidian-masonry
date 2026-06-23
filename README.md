@@ -2,6 +2,10 @@
 
 An Obsidian plugin that displays folder contents in a Pinterest-like masonry layout with tag management, pin boards, and drag-and-drop.
 
+<p align="center">
+  <img src="images/screen1.jpg">
+</p>
+
 ## Usage
 
 - You can use folders to view it's content as masonry tiles (call them items). You work with actual files it this case.
@@ -21,7 +25,6 @@ An Obsidian plugin that displays folder contents in a Pinterest-like masonry lay
 ---
   
 <p align="center">
-  <img src="images/screen1.jpg">
   <img src="images/screen2.jpg">
   <img src="images/screen3.jpg">
   <img src="images/options.jpg">
