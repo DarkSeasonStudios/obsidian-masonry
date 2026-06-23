@@ -1,9 +1,9 @@
 {
-  "id": "obsidian-masonry-pinboards",
+  "id": "masonry-pinboards",
   "name": "Obsidian Masonry",
   "version": "1.0.0",
   "minAppVersion": "1.1.6",
-  "description": "Pinterest-like masonry layout for folders in Obsidian.md, pin-boards, tags and such",
+  "description": "Pinterest-like waterfall masonry layout for folders, pin-boards, tags and such",
   "author": "Vitaly Maltsev",
   "authorUrl": "https://github.com/DarkSeasonStudios",
   "isDesktopOnly": false
