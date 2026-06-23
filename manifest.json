@@ -1,6 +1,6 @@
 {
   "id": "masonry-pinboards",
-  "name": "Obsidian Masonry",
+  "name": "Masonry Pinboards",
   "version": "1.0.0",
   "minAppVersion": "1.1.6",
   "description": "Pinterest-like waterfall masonry layout for folders, pin-boards, tags and such",
