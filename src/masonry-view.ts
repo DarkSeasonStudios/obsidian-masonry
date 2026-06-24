@@ -492,8 +492,8 @@ export class MasonryView extends ItemView {
 			const scale = 0.75 + (freq / maxFreq) * 0.5;
 			el.style.fontSize = `${scale}em`;
 			el.addEventListener('click', () => {
-				this.searchEl.value = `#${tag}`;
-				this.searchQuery = `#${tag}`;
+				this.searchEl.value = tag;
+				this.searchQuery = tag;
 				this.tagCloudEl.addClass('masonry-hide');
 				this.render();
 			});
@@ -704,17 +704,15 @@ export class MasonryView extends ItemView {
 			}
 		}
 
-		// notes in their own CSS-columns grid
+		// notes in their own flexbox-columns grid
 		const notes = files.filter(i => i.type === 'note');
 		if (notes.length > 0) {
 			hasSections.push('notes');
 			const grid = this.gridWrapper.createDiv({ cls: 'masonry-grid masonry-grid-notes' });
-			grid.style.columnCount = String(colCount);
-			grid.style.columnGap = `${gap}px`;
 			grid.style.marginTop = `${gap}px`;
-			for (const item of notes) {
-				this.createCardIn(grid, item);
-			}
+			const cols: HTMLElement[] = [];
+			for (let i = 0; i < colCount; i++) cols.push(grid.createDiv({ cls: 'masonry-col' }));
+			notes.forEach((item, idx) => this.createCardIn(cols[idx % colCount], item));
 		}
 
 		// images, videos, other files in their own grid
@@ -722,12 +720,10 @@ export class MasonryView extends ItemView {
 		if (others.length > 0) {
 			hasSections.push('others');
 			const grid = this.gridWrapper.createDiv({ cls: 'masonry-grid masonry-grid-others' });
-			grid.style.columnCount = String(colCount);
-			grid.style.columnGap = `${gap}px`;
 			grid.style.marginTop = `${gap}px`;
-			for (const item of others) {
-				this.createCardIn(grid, item);
-			}
+			const cols: HTMLElement[] = [];
+			for (let i = 0; i < colCount; i++) cols.push(grid.createDiv({ cls: 'masonry-col' }));
+			others.forEach((item, idx) => this.createCardIn(cols[idx % colCount], item));
 		}
 
 		if (hasSections.length === 0) {

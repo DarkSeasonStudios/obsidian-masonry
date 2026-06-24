@@ -618,8 +618,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
       const scale = 0.75 + freq / maxFreq * 0.5;
       el.style.fontSize = `${scale}em`;
       el.addEventListener("click", () => {
-        this.searchEl.value = `#${tag}`;
-        this.searchQuery = `#${tag}`;
+        this.searchEl.value = tag;
+        this.searchQuery = tag;
         this.tagCloudEl.addClass("masonry-hide");
         this.render();
       });
@@ -819,23 +819,21 @@ var MasonryView = class extends import_obsidian2.ItemView {
     if (notes.length > 0) {
       hasSections.push("notes");
       const grid = this.gridWrapper.createDiv({ cls: "masonry-grid masonry-grid-notes" });
-      grid.style.columnCount = String(colCount);
-      grid.style.columnGap = `${gap}px`;
       grid.style.marginTop = `${gap}px`;
-      for (const item of notes) {
-        this.createCardIn(grid, item);
-      }
+      const cols = [];
+      for (let i = 0; i < colCount; i++)
+        cols.push(grid.createDiv({ cls: "masonry-col" }));
+      notes.forEach((item, idx) => this.createCardIn(cols[idx % colCount], item));
     }
     const others = files.filter((i) => i.type !== "note");
     if (others.length > 0) {
       hasSections.push("others");
       const grid = this.gridWrapper.createDiv({ cls: "masonry-grid masonry-grid-others" });
-      grid.style.columnCount = String(colCount);
-      grid.style.columnGap = `${gap}px`;
       grid.style.marginTop = `${gap}px`;
-      for (const item of others) {
-        this.createCardIn(grid, item);
-      }
+      const cols = [];
+      for (let i = 0; i < colCount; i++)
+        cols.push(grid.createDiv({ cls: "masonry-col" }));
+      others.forEach((item, idx) => this.createCardIn(cols[idx % colCount], item));
     }
     if (hasSections.length === 0) {
       this.gridWrapper.createDiv({ cls: "masonry-empty" }).setText(q ? "No items match your search" : this.isBoardView ? "This board is empty \u2014 pin some items!" : "This folder is empty");
@@ -1529,110 +1527,58 @@ var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
+  getControlValue(key) {
+    return this.plugin.settings[key];
+  }
+  setControlValue(key, value) {
+    this.plugin.settings[key] = value;
+    void this.plugin.saveSettings();
+    this.refreshMasonryViews();
+  }
   refreshMasonryViews() {
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY)) {
       if (leaf.view instanceof MasonryView)
         leaf.view.render();
     }
   }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    new import_obsidian3.Setting(containerEl).setName("Masonry View").setHeading();
-    containerEl.createEl("p", {
-      text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.'
-    });
-    new import_obsidian3.Setting(containerEl).setName("Show file names under items").setDesc("Display the filename below each masonry card").addToggle(
-      (t) => t.setValue(this.plugin.settings.showFileNames).onChange(async (v) => {
-        this.plugin.settings.showFileNames = v;
-        await this.plugin.saveSettings();
-        this.refreshMasonryViews();
-      })
-    );
-    new import_obsidian3.Setting(containerEl).setName("Show tags under items").setDesc("Display tags below each masonry card").addToggle(
-      (t) => t.setValue(this.plugin.settings.showTags).onChange(async (v) => {
-        this.plugin.settings.showTags = v;
-        await this.plugin.saveSettings();
-        this.refreshMasonryViews();
-      })
-    );
-    new import_obsidian3.Setting(containerEl).setName("Gap between items").setDesc("Spacing between cards in pixels").addText(
-      (t) => t.setValue(String(this.plugin.settings.itemGap)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-          this.plugin.settings.itemGap = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
+  getSettingDefinitions() {
+    return [
+      {
+        name: "Masonry View",
+        desc: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.'
+      },
+      { name: "Show file names under items", desc: "Display the filename below each masonry card", control: { type: "toggle", key: "showFileNames" } },
+      { name: "Show tags under items", desc: "Display tags below each masonry card", control: { type: "toggle", key: "showTags" } },
+      { name: "Gap between items", desc: "Spacing between cards in pixels", control: { type: "number", key: "itemGap" } },
+      { name: "Column count", desc: "Number of masonry columns", control: { type: "number", key: "columnCount" } },
+      { name: "Note card min height", desc: "Minimum card height for notes (px)", control: { type: "number", key: "noteCardMinHeight" } },
+      { name: "Note card max height", desc: "Maximum card height for notes (px) \u2014 content exceeding this is clipped", control: { type: "number", key: "noteCardMaxHeight" } },
+      { name: "Note card font size", desc: "Font size for the note preview text (px)", control: { type: "number", key: "noteCardFontSize" } },
+      { name: "Folders per row", desc: "Number of folder cards in a single row", control: { type: "number", key: "folderCount" } },
+      {
+        name: "Masonry-enabled folders",
+        render: (setting) => {
+          const el = setting.controlEl;
+          el.empty();
+          const list = el.createEl("ul");
+          if (this.plugin.settings.masonryFolders.length === 0) {
+            list.createEl("li", { text: "None" });
+          } else {
+            for (const p of this.plugin.settings.masonryFolders) {
+              list.createEl("li", { text: p });
+            }
+          }
+          el.createEl("hr");
+          new import_obsidian3.Setting(el).setName("Clear all folder assignments").setDesc("Remove masonry view from all folders").addButton(
+            (btn) => btn.setButtonText("Clear All").setDestructive().onClick(async () => {
+              this.plugin.settings.masonryFolders = [];
+              await this.plugin.saveSettings();
+              this.update();
+              new import_obsidian3.Notice("Cleared all masonry folder settings");
+            })
+          );
         }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Column count").setDesc("Number of masonry columns").addText(
-      (t) => t.setValue(String(this.plugin.settings.columnCount)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-          this.plugin.settings.columnCount = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
-        }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Note card min height").setDesc("Minimum card height for notes (px)").addText(
-      (t) => t.setValue(String(this.plugin.settings.noteCardMinHeight)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-          this.plugin.settings.noteCardMinHeight = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
-        }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Note card max height").setDesc("Maximum card height for notes (px) \u2014 content exceeding this is clipped").addText(
-      (t) => t.setValue(String(this.plugin.settings.noteCardMaxHeight)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-          this.plugin.settings.noteCardMaxHeight = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
-        }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Note card font size").setDesc("Font size for the note preview text (px)").addText(
-      (t) => t.setValue(String(this.plugin.settings.noteCardFontSize)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n)) {
-          this.plugin.settings.noteCardFontSize = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
-        }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Folders per row").setDesc("Number of folder cards in a single row").addText(
-      (t) => t.setValue(String(this.plugin.settings.folderCount)).onChange(async (v) => {
-        const n = parseInt(v);
-        if (!isNaN(n) && n > 0) {
-          this.plugin.settings.folderCount = n;
-          await this.plugin.saveSettings();
-          this.refreshMasonryViews();
-        }
-      }).inputEl.type = "number"
-    );
-    new import_obsidian3.Setting(containerEl).setName("Masonry-enabled folders").setHeading();
-    const list = containerEl.createEl("ul");
-    if (this.plugin.settings.masonryFolders.length === 0) {
-      list.createEl("li", { text: "None" });
-    } else {
-      for (const p of this.plugin.settings.masonryFolders) {
-        list.createEl("li", { text: p });
       }
-    }
-    containerEl.createEl("hr");
-    new import_obsidian3.Setting(containerEl).setName("Clear all folder assignments").setDesc("Remove masonry view from all folders").addButton(
-      (btn) => btn.setButtonText("Clear All").setDestructive().onClick(async () => {
-        this.plugin.settings.masonryFolders = [];
-        await this.plugin.saveSettings();
-        this.display();
-        new import_obsidian3.Notice("Cleared all masonry folder settings");
-      })
-    );
+    ];
   }
 };

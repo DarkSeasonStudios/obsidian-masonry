@@ -453,124 +453,63 @@ class MasonrySettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	getControlValue(key: string): unknown {
+		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
+	}
+
+	setControlValue(key: string, value: unknown): void {
+		(this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+		void this.plugin.saveSettings();
+		this.refreshMasonryViews();
+	}
+
 	private refreshMasonryViews() {
 		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY)) {
 			if (leaf.view instanceof MasonryView) leaf.view.render();
 		}
 	}
-	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
 
-		new Setting(containerEl).setName('Masonry View').setHeading();
-
-		containerEl.createEl('p', {
-			text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',
-		});
-
-		new Setting(containerEl)
-			.setName('Show file names under items')
-			.setDesc('Display the filename below each masonry card')
-			.addToggle((t) =>
-				t.setValue(this.plugin.settings.showFileNames).onChange(async (v) => {
-					this.plugin.settings.showFileNames = v;
-					await this.plugin.saveSettings();
-					this.refreshMasonryViews();
-				})
-			);
-
-		new Setting(containerEl)
-			.setName('Show tags under items')
-			.setDesc('Display tags below each masonry card')
-			.addToggle((t) =>
-				t.setValue(this.plugin.settings.showTags).onChange(async (v) => {
-					this.plugin.settings.showTags = v;
-					await this.plugin.saveSettings();
-					this.refreshMasonryViews();
-				})
-			);
-
-		new Setting(containerEl)
-			.setName('Gap between items')
-			.setDesc('Spacing between cards in pixels')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.itemGap)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n)) { this.plugin.settings.itemGap = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl)
-			.setName('Column count')
-			.setDesc('Number of masonry columns')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.columnCount)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n)) { this.plugin.settings.columnCount = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl)
-			.setName('Note card min height')
-			.setDesc('Minimum card height for notes (px)')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.noteCardMinHeight)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n)) { this.plugin.settings.noteCardMinHeight = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl)
-			.setName('Note card max height')
-			.setDesc('Maximum card height for notes (px) — content exceeding this is clipped')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.noteCardMaxHeight)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n)) { this.plugin.settings.noteCardMaxHeight = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl)
-			.setName('Note card font size')
-			.setDesc('Font size for the note preview text (px)')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.noteCardFontSize)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n)) { this.plugin.settings.noteCardFontSize = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl)
-			.setName('Folders per row')
-			.setDesc('Number of folder cards in a single row')
-			.addText((t) =>
-				t.setValue(String(this.plugin.settings.folderCount)).onChange(async (v) => {
-					const n = parseInt(v);
-					if (!isNaN(n) && n > 0) { this.plugin.settings.folderCount = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
-				}).inputEl.type = 'number'
-			);
-
-		new Setting(containerEl).setName('Masonry-enabled folders').setHeading();
-		const list = containerEl.createEl('ul');
-		if (this.plugin.settings.masonryFolders.length === 0) {
-			list.createEl('li', { text: 'None' });
-		} else {
-			for (const p of this.plugin.settings.masonryFolders) {
-				list.createEl('li', { text: p });
-			}
-		}
-
-		containerEl.createEl('hr');
-		new Setting(containerEl)
-			.setName('Clear all folder assignments')
-			.setDesc('Remove masonry view from all folders')
-			.addButton((btn) =>
-				btn.setButtonText('Clear All').setDestructive().onClick(async () => {
-					this.plugin.settings.masonryFolders = [];
-					await this.plugin.saveSettings();
-					this.display();
-					new Notice('Cleared all masonry folder settings');
-				})
-			);
+	getSettingDefinitions(): import('obsidian').SettingDefinitionItem[] {
+		return [
+			{
+				name: 'Masonry View',
+				desc: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',
+			},
+			{ name: 'Show file names under items', desc: 'Display the filename below each masonry card', control: { type: 'toggle', key: 'showFileNames' } },
+			{ name: 'Show tags under items', desc: 'Display tags below each masonry card', control: { type: 'toggle', key: 'showTags' } },
+			{ name: 'Gap between items', desc: 'Spacing between cards in pixels', control: { type: 'number', key: 'itemGap' } },
+			{ name: 'Column count', desc: 'Number of masonry columns', control: { type: 'number', key: 'columnCount' } },
+			{ name: 'Note card min height', desc: 'Minimum card height for notes (px)', control: { type: 'number', key: 'noteCardMinHeight' } },
+			{ name: 'Note card max height', desc: 'Maximum card height for notes (px) — content exceeding this is clipped', control: { type: 'number', key: 'noteCardMaxHeight' } },
+			{ name: 'Note card font size', desc: 'Font size for the note preview text (px)', control: { type: 'number', key: 'noteCardFontSize' } },
+			{ name: 'Folders per row', desc: 'Number of folder cards in a single row', control: { type: 'number', key: 'folderCount' } },
+			{
+				name: 'Masonry-enabled folders',
+				render: (setting: Setting) => {
+					const el = setting.controlEl;
+					el.empty();
+					const list = el.createEl('ul');
+					if (this.plugin.settings.masonryFolders.length === 0) {
+						list.createEl('li', { text: 'None' });
+					} else {
+						for (const p of this.plugin.settings.masonryFolders) {
+							list.createEl('li', { text: p });
+						}
+					}
+					el.createEl('hr');
+					new Setting(el)
+						.setName('Clear all folder assignments')
+						.setDesc('Remove masonry view from all folders')
+						.addButton((btn) =>
+							btn.setButtonText('Clear All').setDestructive().onClick(async () => {
+								this.plugin.settings.masonryFolders = [];
+								await this.plugin.saveSettings();
+								this.update();
+								new Notice('Cleared all masonry folder settings');
+							})
+						);
+				},
+			},
+		];
 	}
 }
