@@ -204,16 +204,15 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   // One-time drag-drop setup — document-level capture to intercept before Obsidian
   setupDragDrop() {
-    var _a;
-    const doc = (_a = window.activeDocument) != null ? _a : document;
+    const doc = activeDocument;
     let lastDragTarget = null;
     const isMasonryTarget = (e) => {
-      var _a2;
-      return !!((_a2 = e.target) == null ? void 0 : _a2.closest(".masonry-grid-wrapper"));
+      var _a;
+      return !!((_a = e.target) == null ? void 0 : _a.closest(".masonry-grid-wrapper"));
     };
     const isNavTitle = (e) => {
-      var _a2, _b;
-      return (_b = (_a2 = e.target) == null ? void 0 : _a2.closest(".nav-file-title")) != null ? _b : null;
+      var _a, _b;
+      return (_b = (_a = e.target) == null ? void 0 : _a.closest(".nav-file-title")) != null ? _b : null;
     };
     const getSrc = (e) => {
       const dt = e.dataTransfer;
@@ -235,7 +234,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       return "";
     };
     const resolvePath = (raw) => {
-      var _a2, _b, _c;
+      var _a, _b;
       const tryPath = (p) => {
         const file = this.app.vault.getAbstractFileByPath(p);
         return file ? file.path : null;
@@ -248,7 +247,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
         if (found)
           return found;
       }
-      const vaultPath = ((_b = (_a2 = this.app.vault.adapter).getFullPath) == null ? void 0 : _b.call(_a2, "/")) || "";
+      const adapter = this.app.vault.adapter;
+      const vaultPath = ((_a = adapter.getFullPath) == null ? void 0 : _a.call(adapter, "/")) || "";
       if (vaultPath) {
         const norm = String(vaultPath).replace(/\\/g, "/").replace(/\/$/, "");
         const tryRel = (rel) => {
@@ -267,7 +267,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
           }
         }
       }
-      const name = ((_c = raw.split("/").pop()) == null ? void 0 : _c.split("\\").pop()) || "";
+      const name = ((_b = raw.split("/").pop()) == null ? void 0 : _b.split("\\").pop()) || "";
       const all = this.app.vault.getAllLoadedFiles();
       const byName = all.filter((f) => f.name === name);
       if (byName.length === 1)
@@ -329,11 +329,11 @@ var MasonryView = class extends import_obsidian2.ItemView {
       lastDragTarget = null;
     };
     const onDrop = async (e) => {
-      var _a2;
+      var _a;
       const src = getSrc(e);
       if (!src)
         return;
-      const multiRaw = (_a2 = e.dataTransfer) == null ? void 0 : _a2.getData("text/x-masonry-items");
+      const multiRaw = (_a = e.dataTransfer) == null ? void 0 : _a.getData("text/x-masonry-items");
       const rawPaths = multiRaw ? JSON.parse(multiRaw) : [src];
       const paths = rawPaths.map(resolvePath).filter(Boolean);
       if (!paths.length)
@@ -376,10 +376,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this._dragHandlers = { dragover: onDragOver, dragleave: onDragLeave, drop: onDrop };
   }
   async onClose() {
-    var _a;
     this.containerEl.empty();
     if (this._dragHandlers) {
-      const doc = (_a = window.activeDocument) != null ? _a : document;
+      const doc = activeDocument;
       for (const [evt, fn] of Object.entries(this._dragHandlers)) {
         doc.removeEventListener(evt, fn, { capture: true });
       }
@@ -577,8 +576,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       this.buildTagCloud();
       this.tagCloudEl.removeClass("masonry-hide");
       window.setTimeout(() => {
-        var _a;
-        const doc = (_a = window.activeDocument) != null ? _a : document;
+        const doc = activeDocument;
         const handler = (e) => {
           if (!this.tagCloudEl.contains(e.target) && e.target !== this.tagCloudBtnEl) {
             this.tagCloudEl.addClass("masonry-hide");
@@ -1000,8 +998,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
       const removed = new Set(this.selected);
       for (const p of this.selected) {
         await this.app.fileManager.processFrontMatter(this.boardFile, (fm) => {
-          if (Array.isArray(fm.pins)) {
-            fm.pins = fm.pins.filter((pin) => pin !== p);
+          const data = fm;
+          if (Array.isArray(data.pins)) {
+            data.pins = data.pins.filter((pin) => pin !== p);
           }
         });
       }
@@ -1015,9 +1014,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       if (!file)
         continue;
       try {
-        if (permanent)
-          await this.app.vault.delete(file, true);
-        else if (file instanceof import_obsidian2.TFile)
+        if (file instanceof import_obsidian2.TFile)
           await this.app.fileManager.trashFile(file);
       } catch (e) {
         console.error("Failed to delete", p, e);
@@ -1118,7 +1115,6 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     this.injectedStyleEl = null;
   }
   async onload() {
-    var _a;
     await this.loadSettings();
     this.registerView(VIEW_TYPE_MASONRY, (leaf) => new MasonryView(leaf, this));
     this.app.workspace.onLayoutReady(() => this.updatePinBoardStyles());
@@ -1209,14 +1205,14 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
       this.app.vault.on("delete", (file) => this.handleDelete(file))
     );
     this.addSettingTab(new MasonrySettingTab(this.app, this));
-    const doc = (_a = window.activeDocument) != null ? _a : document;
+    const doc = activeDocument;
     let lastClickPath = "";
     let lastClickTime = 0;
     this.registerDomEvent(doc, "click", (e) => {
-      var _a2;
+      var _a;
       if (e.button !== 0)
         return;
-      const content = (_a2 = e.target) == null ? void 0 : _a2.closest(".nav-folder-title-content");
+      const content = (_a = e.target) == null ? void 0 : _a.closest(".nav-folder-title-content");
       if (!content)
         return;
       const title = content.closest(".nav-folder-title");
@@ -1244,7 +1240,8 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     }
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const data = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
   }
   async saveSettings() {
     await this.saveData(this.settings);
@@ -1265,7 +1262,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     const path = folderOrBoardPath || "/";
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY);
     if (leaves.length > 0) {
-      this.app.workspace.revealLeaf(leaves[0]);
+      void this.app.workspace.revealLeaf(leaves[0]);
       if (leaves[0].view instanceof MasonryView) {
         await leaves[0].view.loadFolderOrBoard(path);
       }
@@ -1277,13 +1274,13 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
       active: true,
       state: { folderPath: path }
     });
-    this.app.workspace.revealLeaf(leaf);
+    void this.app.workspace.revealLeaf(leaf);
   }
   // ── pin boards ─────────────────────────────────────────
   isPinBoard(file) {
-    var _a;
     const cache = this.app.metadataCache.getFileCache(file);
-    const tags = (_a = cache == null ? void 0 : cache.frontmatter) == null ? void 0 : _a.tags;
+    const fm = cache == null ? void 0 : cache.frontmatter;
+    const tags = fm == null ? void 0 : fm.tags;
     return Array.isArray(tags) && tags.includes("pin-board") || typeof tags === "string" && tags === "pin-board";
   }
   getPinBoards() {
@@ -1321,9 +1318,8 @@ Your pinned items will appear here.
     }
   }
   updatePinBoardStyles() {
-    var _a;
     if (!this.injectedStyleEl) {
-      const doc = (_a = window.activeDocument) != null ? _a : document;
+      const doc = activeDocument;
       this.injectedStyleEl = doc.createElement("style");
       this.injectedStyleEl.setAttr("data-masonry-icons", "");
       doc.head.appendChild(this.injectedStyleEl);
@@ -1349,9 +1345,10 @@ Your pinned items will appear here.
     for (const board of boards) {
       let changed = false;
       await this.app.fileManager.processFrontMatter(board, (fm) => {
-        if (!Array.isArray(fm.pins))
+        const data = fm;
+        if (!Array.isArray(data.pins))
           return;
-        const updated = fm.pins.map((p) => {
+        const updated = data.pins.map((p) => {
           if (p === oldPath) {
             changed = true;
             return newPath;
@@ -1363,7 +1360,7 @@ Your pinned items will appear here.
           return p;
         });
         if (changed)
-          fm.pins = updated;
+          data.pins = updated;
       });
       if (changed) {
         needRefresh = true;
@@ -1385,9 +1382,10 @@ Your pinned items will appear here.
     for (const board of boards) {
       let changed = false;
       await this.app.fileManager.processFrontMatter(board, (fm) => {
-        if (!Array.isArray(fm.pins))
+        const data = fm;
+        if (!Array.isArray(data.pins))
           return;
-        const filtered = fm.pins.filter((p) => {
+        const filtered = data.pins.filter((p) => {
           if (p === path || p.startsWith(path + "/")) {
             changed = true;
             return false;
@@ -1395,7 +1393,7 @@ Your pinned items will appear here.
           return true;
         });
         if (changed)
-          fm.pins = filtered;
+          data.pins = filtered;
       });
       if (changed) {
         needRefresh = true;
@@ -1459,10 +1457,12 @@ Your pinned items will appear here.
   async addToPinBoard(filePath, board) {
     const normalized = this.toVaultRelativePath(filePath);
     await this.app.fileManager.processFrontMatter(board, (fm) => {
-      if (!Array.isArray(fm.pins))
-        fm.pins = [];
-      if (!fm.pins.includes(normalized))
-        fm.pins.push(normalized);
+      const data = fm;
+      if (!Array.isArray(data.pins))
+        data.pins = [];
+      const pins = data.pins;
+      if (!pins.includes(normalized))
+        pins.push(normalized);
     });
   }
   async getPinBoardPins(board) {
@@ -1515,7 +1515,8 @@ Your pinned items will appear here.
     if (file instanceof import_obsidian3.TFile && file.extension === "md") {
       try {
         await this.app.fileManager.processFrontMatter(file, (fm) => {
-          fm.tags = tags.length > 0 ? [...tags] : void 0;
+          const data = fm;
+          data.tags = tags.length > 0 ? [...tags] : void 0;
         });
       } catch (e) {
       }
@@ -1537,7 +1538,7 @@ var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian3.Setting(containerEl).setName("Masonry View Settings").setHeading();
+    new import_obsidian3.Setting(containerEl).setName("Masonry View").setHeading();
     containerEl.createEl("p", {
       text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.'
     });

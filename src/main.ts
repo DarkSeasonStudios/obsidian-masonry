@@ -2,6 +2,8 @@ import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, TAbstractFile, 
 import { MasonryView, VIEW_TYPE_MASONRY } from './masonry-view';
 import { PinSelectModal } from './modals';
 
+type FrontMatterData = Record<string, unknown>;
+
 export interface MasonrySettings {
 	masonryFolders: string[];
 	showFileNames: boolean;
@@ -135,7 +137,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		this.addSettingTab(new MasonrySettingTab(this.app, this));
 
 		// click masonry-enabled folder in file explorer → auto-open masonry view
-		const doc = window.activeDocument ?? document;
+		const doc = activeDocument;
 		let lastClickPath = '';
 		let lastClickTime = 0;
 		this.registerDomEvent(doc, 'click', (e: MouseEvent) => {
@@ -169,7 +171,8 @@ export default class ObsidianMasonryPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = (await this.loadData()) as Partial<MasonrySettings>;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 	}
 
 	async saveSettings() {
@@ -193,7 +196,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		const path = folderOrBoardPath || '/';
 		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY);
 		if (leaves.length > 0) {
-			this.app.workspace.revealLeaf(leaves[0]);
+			void this.app.workspace.revealLeaf(leaves[0]);
 			if (leaves[0].view instanceof MasonryView) {
 				await leaves[0].view.loadFolderOrBoard(path);
 			}
@@ -205,14 +208,15 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			active: true,
 			state: { folderPath: path },
 		});
-		this.app.workspace.revealLeaf(leaf);
+		void this.app.workspace.revealLeaf(leaf);
 	}
 
 	// ── pin boards ─────────────────────────────────────────
 
 	isPinBoard(file: TFile): boolean {
 		const cache = this.app.metadataCache.getFileCache(file);
-		const tags = cache?.frontmatter?.tags;
+		const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+		const tags = fm?.tags;
 		return (Array.isArray(tags) && tags.includes('pin-board')) ||
 		       (typeof tags === 'string' && tags === 'pin-board');
 	}
@@ -248,7 +252,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 
 	updatePinBoardStyles() {
 		if (!this.injectedStyleEl) {
-			const doc = window.activeDocument ?? document;
+			const doc = activeDocument;
 			this.injectedStyleEl = doc.createElement('style');
 			this.injectedStyleEl.setAttr('data-masonry-icons', '');
 			doc.head.appendChild(this.injectedStyleEl);
@@ -277,8 +281,9 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		for (const board of boards) {
 			let changed = false;
 			await this.app.fileManager.processFrontMatter(board, (fm) => {
-				if (!Array.isArray(fm.pins)) return;
-				const updated = fm.pins.map((p: string) => {
+				const data = fm as FrontMatterData;
+				if (!Array.isArray(data.pins)) return;
+				const updated = (data.pins as string[]).map((p: string) => {
 					if (p === oldPath) { changed = true; return newPath; }
 					if (p.startsWith(oldPath + '/')) {
 						changed = true;
@@ -286,7 +291,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 					}
 					return p;
 				});
-				if (changed) fm.pins = updated;
+				if (changed) data.pins = updated;
 			});
 			if (changed) {
 				needRefresh = true;
@@ -309,12 +314,13 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		for (const board of boards) {
 			let changed = false;
 			await this.app.fileManager.processFrontMatter(board, (fm) => {
-				if (!Array.isArray(fm.pins)) return;
-				const filtered = fm.pins.filter((p: string) => {
+				const data = fm as FrontMatterData;
+				if (!Array.isArray(data.pins)) return;
+				const filtered = (data.pins as string[]).filter((p: string) => {
 					if (p === path || p.startsWith(path + '/')) { changed = true; return false; }
 					return true;
 				});
-				if (changed) fm.pins = filtered;
+				if (changed) data.pins = filtered;
 			});
 			if (changed) {
 				needRefresh = true;
@@ -373,8 +379,10 @@ export default class ObsidianMasonryPlugin extends Plugin {
 	async addToPinBoard(filePath: string, board: TFile) {
 		const normalized = this.toVaultRelativePath(filePath);
 		await this.app.fileManager.processFrontMatter(board, (fm) => {
-			if (!Array.isArray(fm.pins)) fm.pins = [];
-			if (!fm.pins.includes(normalized)) fm.pins.push(normalized);
+			const data = fm as FrontMatterData;
+			if (!Array.isArray(data.pins)) data.pins = [];
+			const pins = data.pins as string[];
+			if (!pins.includes(normalized)) pins.push(normalized);
 		});
 	}
 
@@ -428,7 +436,8 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		if (file instanceof TFile && file.extension === 'md') {
 			try {
 				await this.app.fileManager.processFrontMatter(file, (fm) => {
-					fm.tags = tags.length > 0 ? [...tags] : undefined;
+					const data = fm as FrontMatterData;
+					data.tags = tags.length > 0 ? [...tags] : undefined;
 				});
 			} catch { /* ignore */ }
 		}
@@ -453,7 +462,7 @@ class MasonrySettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName('Masonry View Settings').setHeading();
+		new Setting(containerEl).setName('Masonry View').setHeading();
 
 		containerEl.createEl('p', {
 			text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',

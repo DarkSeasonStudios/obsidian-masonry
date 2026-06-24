@@ -78,7 +78,7 @@ export class MasonryView extends ItemView {
 
 	// One-time drag-drop setup — document-level capture to intercept before Obsidian
 	private setupDragDrop() {
-		const doc = window.activeDocument ?? document;
+		const doc = activeDocument;
 		let lastDragTarget: Element | null = null;
 		const isMasonryTarget = (e: Event): boolean =>
 			!!(e.target as HTMLElement)?.closest('.masonry-grid-wrapper');
@@ -120,7 +120,8 @@ export class MasonryView extends ItemView {
 				if (found) return found;
 			}
 			// try as absolute path — strip vault base
-			const vaultPath = (this.app.vault.adapter as any).getFullPath?.('/') || '';
+			const adapter = this.app.vault.adapter as { getFullPath?: (path: string) => string };
+			const vaultPath = adapter.getFullPath?.('/') || '';
 			if (vaultPath) {
 				const norm = String(vaultPath).replace(/\\/g, '/').replace(/\/$/, '');
 				const tryRel = (rel: string): string | null => {
@@ -200,7 +201,7 @@ export class MasonryView extends ItemView {
 			const src = getSrc(e);
 			if (!src) return;
 			const multiRaw = e.dataTransfer?.getData('text/x-masonry-items');
-			const rawPaths: string[] = multiRaw ? JSON.parse(multiRaw) : [src];
+			const rawPaths: string[] = multiRaw ? (JSON.parse(multiRaw) as string[]) : [src];
 			const paths = rawPaths.map(resolvePath).filter(Boolean);
 			if (!paths.length) return;
 
@@ -244,7 +245,7 @@ export class MasonryView extends ItemView {
 	async onClose() {
 		this.containerEl.empty();
 		if (this._dragHandlers) {
-			const doc = window.activeDocument ?? document;
+			const doc = activeDocument;
 			for (const [evt, fn] of Object.entries(this._dragHandlers)) {
 				doc.removeEventListener(evt, fn, { capture: true });
 			}
@@ -255,7 +256,7 @@ export class MasonryView extends ItemView {
 		return { folderPath: this.currentPath, history: this.history, historyIdx: this.historyIdx, isBoardView: this.isBoardView };
 	}
 
-	async setState(state: Record<string, unknown>, result: any): Promise<void> {
+	async setState(state: Record<string, unknown>, result: unknown): Promise<void> {
 		const path = state.folderPath as string;
 		if (path) {
 			this.currentPath = path;
@@ -443,7 +444,7 @@ export class MasonryView extends ItemView {
 			this.buildTagCloud();
 			this.tagCloudEl.removeClass('masonry-hide');
 			window.setTimeout(() => {
-				const doc = window.activeDocument ?? document;
+			const doc = activeDocument;
 				const handler = (e: MouseEvent) => {
 					if (!this.tagCloudEl.contains(e.target as Node) && e.target !== this.tagCloudBtnEl) {
 						this.tagCloudEl.addClass('masonry-hide');
@@ -891,8 +892,9 @@ export class MasonryView extends ItemView {
 			for (const p of this.selected) {
 				// remove pin from board
 				await this.app.fileManager.processFrontMatter(this.boardFile, (fm) => {
-					if (Array.isArray(fm.pins)) {
-						fm.pins = fm.pins.filter((pin: string) => pin !== p);
+					const data = fm as Record<string, unknown>;
+					if (Array.isArray(data.pins)) {
+						data.pins = (data.pins as string[]).filter((pin: string) => pin !== p);
 					}
 				});
 			}
@@ -905,8 +907,7 @@ export class MasonryView extends ItemView {
 			const file = this.app.vault.getAbstractFileByPath(p);
 			if (!file) continue;
 			try {
-				if (permanent) await this.app.vault.delete(file, true);
-				else if (file instanceof TFile) await this.app.fileManager.trashFile(file);
+				if (file instanceof TFile) await this.app.fileManager.trashFile(file);
 			} catch (e) { console.error('Failed to delete', p, e); }
 		}
 		const count = this.selected.size;
