@@ -44,7 +44,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			checkCallback: (checking: boolean) => {
 				const file = this.app.workspace.getActiveFile();
 				if (file?.parent) {
-					if (!checking) this.openMasonryView(file.parent.path);
+					if (!checking) void this.openMasonryView(file.parent.path);
 					return true;
 				}
 				return false;
@@ -57,7 +57,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			checkCallback: (checking: boolean) => {
 				const file = this.app.workspace.getActiveFile();
 				if (file?.parent) {
-					if (!checking) this.toggleMasonryFolder(file.parent.path);
+					if (!checking) void this.toggleMasonryFolder(file.parent.path);
 					return true;
 				}
 				return false;
@@ -72,7 +72,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 				if (this.isPinBoard(file)) {
 					this._openingBoard = true;
 					await this.openMasonryView(file.path);
-					setTimeout(() => { this._openingBoard = false; }, 500);
+					window.setTimeout(() => { this._openingBoard = false; }, 500);
 				}
 			})
 		);
@@ -102,7 +102,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 									new Notice(`Pin board "${name}" created`);
 									this._openingBoard = true;
 									await this.openMasonryView(board.path);
-									setTimeout(() => { this._openingBoard = false; }, 500);
+									window.setTimeout(() => { this._openingBoard = false; }, 500);
 								}
 							});
 					});
@@ -135,14 +135,15 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		this.addSettingTab(new MasonrySettingTab(this.app, this));
 
 		// click masonry-enabled folder in file explorer → auto-open masonry view
+		const doc = window.activeDocument ?? document;
 		let lastClickPath = '';
 		let lastClickTime = 0;
-		this.registerDomEvent(document, 'click', (e: MouseEvent) => {
+		this.registerDomEvent(doc, 'click', (e: MouseEvent) => {
 			if (e.button !== 0) return;
 			// only intercept clicks on the title text area, not the collapse indicator
 			const content = (e.target as HTMLElement)?.closest('.nav-folder-title-content');
 			if (!content) return;
-			const title = content.closest('.nav-folder-title') as HTMLElement | null;
+			const title = content.closest('.nav-folder-title');
 			if (!title) return;
 			const path = title.getAttr('data-path');
 			if (!path || !this.settings.masonryFolders.includes(path)) return;
@@ -157,12 +158,14 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			lastClickTime = now;
 			e.preventDefault();
 			e.stopPropagation();
-			this.openMasonryView(path);
+			void this.openMasonryView(path);
 		}, true);
 	}
 
 	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_MASONRY);
+		if (this.injectedStyleEl) {
+			this.injectedStyleEl.remove();
+		}
 	}
 
 	async loadSettings() {
@@ -245,9 +248,10 @@ export default class ObsidianMasonryPlugin extends Plugin {
 
 	updatePinBoardStyles() {
 		if (!this.injectedStyleEl) {
-			this.injectedStyleEl = this.app.workspace.containerEl.doc.createElement('style');
+			const doc = window.activeDocument ?? document;
+			this.injectedStyleEl = doc.createElement('style');
 			this.injectedStyleEl.setAttr('data-masonry-icons', '');
-			document.head.appendChild(this.injectedStyleEl);
+			doc.head.appendChild(this.injectedStyleEl);
 		}
 		let css = '';
 		// pin-board files → pin icon (monochrome SVG mask)
@@ -340,7 +344,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		}
 		// strip vault base from absolute path
 		try {
-			const vaultPath = (this.app.vault.adapter as any).getFullPath?.('/') || '';
+			const vaultPath = (this.app.vault.adapter as { getFullPath?: (path: string) => string }).getFullPath?.('/') || '';
 			const norm = String(vaultPath).replace(/\\/g, '/').replace(/\/$/, '');
 			if (norm && clean.startsWith(norm + '/')) {
 				const rel = clean.slice(norm.length + 1);
@@ -420,8 +424,8 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			this.settings.fileTags[filePath] = [...tags];
 		}
 		// Also write to frontmatter for .md files (interop)
-		const file = this.app.vault.getAbstractFileByPath(filePath) as TFile;
-		if (file && file.extension === 'md') {
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile && file.extension === 'md') {
 			try {
 				await this.app.fileManager.processFrontMatter(file, (fm) => {
 					fm.tags = tags.length > 0 ? [...tags] : undefined;
@@ -445,11 +449,11 @@ class MasonrySettingTab extends PluginSettingTab {
 			if (leaf.view instanceof MasonryView) leaf.view.render();
 		}
 	}
-
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Masonry View Settings' });
+
+		new Setting(containerEl).setName('Masonry View Settings').setHeading();
 
 		containerEl.createEl('p', {
 			text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',
@@ -537,7 +541,7 @@ class MasonrySettingTab extends PluginSettingTab {
 				}).inputEl.type = 'number'
 			);
 
-		containerEl.createEl('h3', { text: 'Masonry-enabled folders' });
+		new Setting(containerEl).setName('Masonry-enabled folders').setHeading();
 		const list = containerEl.createEl('ul');
 		if (this.plugin.settings.masonryFolders.length === 0) {
 			list.createEl('li', { text: 'None' });
@@ -552,7 +556,7 @@ class MasonrySettingTab extends PluginSettingTab {
 			.setName('Clear all folder assignments')
 			.setDesc('Remove masonry view from all folders')
 			.addButton((btn) =>
-				btn.setButtonText('Clear All').setWarning().onClick(async () => {
+				btn.setButtonText('Clear All').setDestructive().onClick(async () => {
 					this.plugin.settings.masonryFolders = [];
 					await this.plugin.saveSettings();
 					this.display();

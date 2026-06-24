@@ -1,4 +1,4 @@
-import { App, Modal, TFile, TFolder, Notice } from 'obsidian';
+import { App, Modal, TFile, Notice } from 'obsidian';
 import type ObsidianMasonryPlugin from './main';
 import type { FileItem } from './masonry-view';
 
@@ -29,32 +29,34 @@ export class TagAssignModal extends Modal {
 
 		const btnRow = contentEl.createDiv({ cls: 'masonry-tag-actions' });
 		const applyBtn = btnRow.createEl('button', { cls: 'mod-cta', text: 'Assign' });
-		applyBtn.addEventListener('click', async () => {
+		applyBtn.addEventListener('click', () => {
 			const raw = input.value.trim();
 			if (!raw) { new Notice('Enter at least one tag'); return; }
 			const newTags = raw.split(',').map((s) => s.trim().replace(/^#/, '')).filter(Boolean);
 			if (newTags.length === 0) { new Notice('Enter at least one tag'); return; }
 
-			for (const p of this.paths) {
-				const file = this.app.vault.getAbstractFileByPath(p);
-				if (!(file instanceof TFile)) continue;
-				try {
-					await this.app.fileManager.processFrontMatter(file, (fm) => {
-						let existing: string[] = [];
-						if (Array.isArray(fm.tags)) {
-							existing = fm.tags.map(String);
-						} else if (typeof fm.tags === 'string') {
-							existing = [fm.tags];
-						}
-						const merged = [...new Set([...existing, ...newTags])];
-						fm.tags = merged;
-					});
-				} catch (e) {
-					console.error('Failed to tag', p, e);
+			void (async () => {
+				for (const p of this.paths) {
+					const file = this.app.vault.getAbstractFileByPath(p);
+					if (!(file instanceof TFile)) continue;
+					try {
+						await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+							let existing: string[] = [];
+							if (Array.isArray(fm.tags)) {
+								existing = fm.tags.map(String);
+							} else if (typeof fm.tags === 'string') {
+								existing = [fm.tags];
+							}
+							const merged = [...new Set([...existing, ...newTags])];
+							fm.tags = merged;
+						});
+					} catch (e) {
+						console.error('Failed to tag', p, e);
+					}
 				}
-			}
-			new Notice(`Assigned tags to ${this.paths.length} item(s)`);
-			this.close();
+				new Notice(`Assigned tags to ${this.paths.length} item(s)`);
+				this.close();
+			})();
 		});
 
 		this.scope?.register([], 'Enter', () => { applyBtn.click(); return false; });
@@ -124,8 +126,8 @@ export class ImageViewModal extends Modal {
 	private show(idx: number) {
 		const item = this.images[idx];
 		if (!item) return;
-		const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
-		if (!file) return;
+		const file = this.app.vault.getAbstractFileByPath(item.path);
+		if (!(file instanceof TFile)) return;
 		this.imgEl.setAttr('src', this.app.vault.getResourcePath(file));
 		this.captionEl.setText(`${item.name}  —  ${idx + 1} / ${this.images.length}`);
 		this.leftNav.toggleClass('masonry-iv-hidden', idx === 0);
@@ -163,12 +165,14 @@ export class PinSelectModal extends Modal {
 			const row = list.createDiv({ cls: 'masonry-pin-row' });
 			row.createSpan({ text: board.name.replace(/\.md$/i, '') });
 			const btn = row.createEl('button', { cls: 'mod-cta', text: 'Pin' });
-			btn.addEventListener('click', async () => {
-				for (const p of this.paths) {
-					await this.plugin.addToPinBoard(p, board);
-				}
-				new Notice(`Pinned ${this.paths.length} item(s) to "${board.name.replace(/\.md$/i, '')}"`);
-				this.close();
+			btn.addEventListener('click', () => {
+				void (async () => {
+					for (const p of this.paths) {
+						await this.plugin.addToPinBoard(p, board);
+					}
+					new Notice(`Pinned ${this.paths.length} item(s) to "${board.name.replace(/\.md$/i, '')}"`);
+					this.close();
+				})();
 			});
 		}
 
@@ -180,16 +184,18 @@ export class PinSelectModal extends Modal {
 			attr: { placeholder: 'Board name…', type: 'text' },
 		});
 		const createBtn = createSec.createEl('button', { text: 'Create & Pin' });
-		createBtn.addEventListener('click', async () => {
-			const name = input.value.trim();
-			if (!name) { new Notice('Enter a name'); return; }
-			const file = await this.plugin.createPinBoard(name);
-			if (!file) return;
-			for (const p of this.paths) {
-				await this.plugin.addToPinBoard(p, file);
-			}
-			new Notice(`Board "${name}" created with ${this.paths.length} pin(s)`);
-			this.close();
+		createBtn.addEventListener('click', () => {
+			void (async () => {
+				const name = input.value.trim();
+				if (!name) { new Notice('Enter a name'); return; }
+				const file = await this.plugin.createPinBoard(name);
+				if (!file) return;
+				for (const p of this.paths) {
+					await this.plugin.addToPinBoard(p, file);
+				}
+				new Notice(`Board "${name}" created with ${this.paths.length} pin(s)`);
+				this.close();
+			})();
 		});
 	}
 

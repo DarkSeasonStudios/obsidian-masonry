@@ -66,10 +66,10 @@ export class MasonryView extends ItemView {
 
 		this.setupDragDrop();
 
-		this.scope?.register(['Mod', 'Shift'], 'Backspace', () => { this.deleteSelected(true); return false; });
+		this.scope?.register(['Mod', 'Shift'], 'Backspace', () => { void this.deleteSelected(true); return false; });
 		this.scope?.register([], 'Delete', (e) => {
-			if (e.ctrlKey || e.metaKey) this.deleteSelected(true);
-			else this.deleteSelected(false);
+			if (e.ctrlKey || e.metaKey) void this.deleteSelected(true);
+			else void this.deleteSelected(false);
 			return false;
 		});
 
@@ -78,7 +78,8 @@ export class MasonryView extends ItemView {
 
 	// One-time drag-drop setup — document-level capture to intercept before Obsidian
 	private setupDragDrop() {
-		let lastDragTarget: HTMLElement | null = null;
+		const doc = window.activeDocument ?? document;
+		let lastDragTarget: Element | null = null;
 		const isMasonryTarget = (e: Event): boolean =>
 			!!(e.target as HTMLElement)?.closest('.masonry-grid-wrapper');
 
@@ -153,8 +154,8 @@ export class MasonryView extends ItemView {
 		};
 
 		const cleanBoardMarkers = () => {
-			document.querySelectorAll('.masonry-drop-board').forEach(el => el.removeClass('masonry-drop-board'));
-			document.querySelectorAll('.masonry-drop-file-exp').forEach(el => el.removeClass('masonry-drop-file-exp'));
+			doc.querySelectorAll('.masonry-drop-board').forEach(el => el.removeClass('masonry-drop-board'));
+			doc.querySelectorAll('.masonry-drop-file-exp').forEach(el => el.removeClass('masonry-drop-file-exp'));
 		};
 
 		const onDragOver = (e: DragEvent) => {
@@ -162,7 +163,7 @@ export class MasonryView extends ItemView {
 			if (isMasonryTarget(e)) {
 				e.preventDefault();
 				e.stopPropagation();
-				const card = (e.target as HTMLElement).closest('.masonry-card') as HTMLElement | null;
+				const card = (e.target as HTMLElement).closest('.masonry-card');
 				if (!card) return;
 				if (lastDragTarget === card) return;
 				if (lastDragTarget) lastDragTarget.removeClass('masonry-drop-board');
@@ -234,17 +235,18 @@ export class MasonryView extends ItemView {
 			}
 		};
 		const opts = { capture: true };
-		document.addEventListener('dragover', onDragOver, opts);
-		document.addEventListener('dragleave', onDragLeave, opts);
-		document.addEventListener('drop', onDrop, opts);
+		doc.addEventListener('dragover', onDragOver, opts);
+		doc.addEventListener('dragleave', onDragLeave, opts);
+		doc.addEventListener('drop', onDrop as EventListener, opts);
 		this._dragHandlers = { dragover: onDragOver as (e: Event) => void, dragleave: onDragLeave as (e: Event) => void, drop: onDrop as (e: Event) => void };
 	}
 
 	async onClose() {
 		this.containerEl.empty();
 		if (this._dragHandlers) {
+			const doc = window.activeDocument ?? document;
 			for (const [evt, fn] of Object.entries(this._dragHandlers)) {
-				document.removeEventListener(evt, fn, { capture: true });
+				doc.removeEventListener(evt, fn, { capture: true });
 			}
 		}
 	}
@@ -309,8 +311,8 @@ export class MasonryView extends ItemView {
 			attr: { 'aria-label': 'Edit board file' },
 		});
 		setIcon(this.editBoardBtnEl, 'pencil');
-		this.editBoardBtnEl.style.display = 'none';
-		this.editBoardBtnEl.addEventListener('click', () => this.editCurrentBoard());
+		this.editBoardBtnEl.addClass('masonry-hide');
+		this.editBoardBtnEl.addEventListener('click', () => { void this.editCurrentBoard(); });
 
 		const actions = row1.createDiv({ cls: 'masonry-actions' });
 
@@ -333,11 +335,11 @@ export class MasonryView extends ItemView {
 			attr: { 'aria-label': 'Pin selected to board' },
 		});
 		setIcon(pinBtn, 'pin');
-		pinBtn.addEventListener('click', () => this.showPinModal());
+		pinBtn.addEventListener('click', () => { void this.showPinModal(); });
 
 		// tag bar (row 2)
 		this.tagBarEl = this.headerEl.createDiv({ cls: 'masonry-tag-bar' });
-		this.tagBarEl.style.display = 'none';
+		this.tagBarEl.addClass('masonry-hide');
 		this.tagBarEl.createSpan({ cls: 'masonry-tag-label', text: 'Tags: ' });
 		this.tagChipsEl = this.tagBarEl.createDiv({ cls: 'masonry-tag-chips' });
 		this.tagInputEl = this.tagBarEl.createEl('input', {
@@ -347,17 +349,17 @@ export class MasonryView extends ItemView {
 		this.tagInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' || e.key === ',') {
 				e.preventDefault();
-				this.addTagFromInput();
+				void this.addTagFromInput();
 			} else if (e.key === 'Backspace' && this.tagInputEl.value === '') {
 				// remove last chip
 				const chips = this.getCurrentChips();
-				if (chips.length > 0) this.removeTagAndSave(chips[chips.length - 1]);
+				if (chips.length > 0) void this.removeTagAndSave(chips[chips.length - 1]);
 			}
 		});
 
 		// tag cloud (hidden)
 		this.tagCloudEl = this.headerEl.createDiv({ cls: 'masonry-tag-cloud' });
-		this.tagCloudEl.style.display = 'none';
+		this.tagCloudEl.addClass('masonry-hide');
 	}
 
 	// ── tag: auto-save on every change ──────────────────────
@@ -411,8 +413,8 @@ export class MasonryView extends ItemView {
 	}
 
 	private renderTagChipsFromSelection() {
-		if (this.selected.size === 0) { this.tagBarEl.style.display = 'none'; return; }
-		this.tagBarEl.style.display = 'flex';
+		if (this.selected.size === 0) { this.tagBarEl.addClass('masonry-hide'); return; }
+		this.tagBarEl.removeClass('masonry-hide');
 		const allTags = new Set<string>();
 		for (const p of this.selected) {
 			for (const t of this.plugin.getItemTags(p)) allTags.add(t);
@@ -423,7 +425,7 @@ export class MasonryView extends ItemView {
 			const chip = this.tagChipsEl.createSpan({ cls: 'masonry-chip' });
 			chip.createSpan({ cls: 'masonry-chip-label', text: `#${tag}` });
 			const del = chip.createSpan({ cls: 'masonry-chip-x', text: '×' });
-			del.addEventListener('click', (e) => { e.stopPropagation(); this.removeTagAndSave(tag); });
+			del.addEventListener('click', (e) => { e.stopPropagation(); void this.removeTagAndSave(tag); });
 		}
 	}
 
@@ -436,24 +438,25 @@ export class MasonryView extends ItemView {
 
 	private toggleTagCloud() {
 		if (this.tagCloudVisible()) {
-			this.tagCloudEl.style.display = 'none';
+			this.tagCloudEl.addClass('masonry-hide');
 		} else {
 			this.buildTagCloud();
-			this.tagCloudEl.style.display = 'block';
-			setTimeout(() => {
+			this.tagCloudEl.removeClass('masonry-hide');
+			window.setTimeout(() => {
+				const doc = window.activeDocument ?? document;
 				const handler = (e: MouseEvent) => {
 					if (!this.tagCloudEl.contains(e.target as Node) && e.target !== this.tagCloudBtnEl) {
-						this.tagCloudEl.style.display = 'none';
-						document.removeEventListener('click', handler);
+						this.tagCloudEl.addClass('masonry-hide');
+						doc.removeEventListener('click', handler);
 					}
 				};
-				document.addEventListener('click', handler);
+				doc.addEventListener('click', handler);
 			}, 0);
 		}
 	}
 
 	private tagCloudVisible(): boolean {
-		return this.tagCloudEl.style.display !== 'none';
+		return !this.tagCloudEl.hasClass('masonry-hide');
 	}
 
 	private buildTagFreq() {
@@ -490,7 +493,7 @@ export class MasonryView extends ItemView {
 			el.addEventListener('click', () => {
 				this.searchEl.value = `#${tag}`;
 				this.searchQuery = `#${tag}`;
-				this.tagCloudEl.style.display = 'none';
+				this.tagCloudEl.addClass('masonry-hide');
 				this.render();
 			});
 		}
@@ -501,7 +504,7 @@ export class MasonryView extends ItemView {
 	async loadFolder(path: string) {
 		this.isBoardView = false;
 		this.boardFile = null;
-		this.editBoardBtnEl.style.display = 'none';
+		this.editBoardBtnEl.addClass('masonry-hide');
 
 		if (this.historyIdx === -1 || this.history[this.historyIdx] !== path) {
 			this.history = this.history.slice(0, this.historyIdx + 1);
@@ -510,8 +513,8 @@ export class MasonryView extends ItemView {
 		}
 		this.currentPath = path;
 		this.selected.clear();
-		this.tagBarEl.style.display = 'none';
-		this.tagCloudEl.style.display = 'none';
+		this.tagBarEl.addClass('masonry-hide');
+		this.tagCloudEl.addClass('masonry-hide');
 		this.updateUI();
 
 		const folder = this.app.vault.getAbstractFileByPath(path);
@@ -530,7 +533,7 @@ export class MasonryView extends ItemView {
 	async loadPinBoard(file: TFile) {
 		this.isBoardView = true;
 		this.boardFile = file;
-		this.editBoardBtnEl.style.display = 'inline-flex';
+		this.editBoardBtnEl.removeClass('masonry-hide');
 
 		const boardPath = file.path;
 		if (this.historyIdx === -1 || this.history[this.historyIdx] !== boardPath) {
@@ -540,8 +543,8 @@ export class MasonryView extends ItemView {
 		}
 		this.currentPath = boardPath;
 		this.selected.clear();
-		this.tagBarEl.style.display = 'none';
-		this.tagCloudEl.style.display = 'none';
+		this.tagBarEl.addClass('masonry-hide');
+		this.tagCloudEl.addClass('masonry-hide');
 		this.updateUI();
 
 		const pins = await this.plugin.getPinBoardPins(file);
@@ -576,7 +579,7 @@ export class MasonryView extends ItemView {
 			this.currentPath = this.history[this.historyIdx];
 			this.selected.clear();
 			this.updateUI();
-			this.loadFolderOrBoard(this.currentPath);
+			void this.loadFolderOrBoard(this.currentPath);
 		}
 	}
 
@@ -586,7 +589,7 @@ export class MasonryView extends ItemView {
 			this.currentPath = this.history[this.historyIdx];
 			this.selected.clear();
 			this.updateUI();
-			this.loadFolderOrBoard(this.currentPath);
+			void this.loadFolderOrBoard(this.currentPath);
 		}
 	}
 
@@ -632,8 +635,8 @@ export class MasonryView extends ItemView {
 	}
 
 	private async getNotePreview(path: string): Promise<string> {
-		const file = this.app.vault.getAbstractFileByPath(path) as TFile;
-		if (!file) return '';
+		const file = this.app.vault.getAbstractFileByPath(path);
+		if (!(file instanceof TFile)) return '';
 		try {
 			const content = await this.app.vault.read(file);
 			const body = content.replace(/^---[\s\S]*?---\n*/m, '');
@@ -646,8 +649,8 @@ export class MasonryView extends ItemView {
 	}
 
 	private async getFolderThumb(path: string): Promise<string | undefined> {
-		const folder = this.app.vault.getAbstractFileByPath(path) as TFolder;
-		if (!folder) return undefined;
+		const folder = this.app.vault.getAbstractFileByPath(path);
+		if (!(folder instanceof TFolder)) return undefined;
 		for (const child of folder.children) {
 			if (child instanceof TFile && IMAGE_EXTS.has(child.extension.toLowerCase())) return child.path;
 		}
@@ -655,8 +658,8 @@ export class MasonryView extends ItemView {
 	}
 
 	private getResourcePath(filePath: string): string {
-		const file = this.app.vault.getAbstractFileByPath(filePath) as TFile;
-		return file ? this.app.vault.getResourcePath(file) : '';
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		return file instanceof TFile ? this.app.vault.getResourcePath(file) : '';
 	}
 
 	// ── rendering ───────────────────────────────────────────
@@ -754,7 +757,7 @@ export class MasonryView extends ItemView {
 			this.renderTagChipsFromSelection();
 		});
 
-		card.addEventListener('dblclick', () => this.openItem(item));
+		card.addEventListener('dblclick', () => { void this.openItem(item); });
 
 		card.addEventListener('dragstart', (e) => {
 			const dragPaths = this.selected.has(item.path) && this.selected.size > 1 ? [...this.selected] : [item.path];
@@ -784,13 +787,13 @@ export class MasonryView extends ItemView {
 
 		if (item.isFolder) {
 			card.addClass('masonry-folder-card');
-			const header = this.buildCardHeader(card, 'folder', item.name);
+			this.buildCardHeader(card, 'folder', item.name);
 			// thumb — first image inside folder, if any
 			if (item.folderThumb) {
 				const thumb = card.createDiv({ cls: 'masonry-thumb' });
 				const src = this.getResourcePath(item.folderThumb);
 				if (src) {
-					const img = thumb.createEl('img', { cls: 'masonry-img', attr: { src, loading: 'lazy' } });
+					thumb.createEl('img', { cls: 'masonry-img', attr: { src, loading: 'lazy' } });
 				}
 			}
 		} else if (item.type === 'note') {
@@ -800,7 +803,7 @@ export class MasonryView extends ItemView {
 			const thumb = card.createDiv({ cls: 'masonry-thumb' });
 			if (item.notePreview) {
 				const previewEl = thumb.createDiv({ cls: 'masonry-note-preview' });
-				MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
+				void MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
 			} else {
 				thumb.createDiv({ cls: 'masonry-note-preview masonry-note-empty', text: '— empty note —' });
 			}
@@ -852,7 +855,7 @@ export class MasonryView extends ItemView {
 	}
 
 	private rangeSelect(card: HTMLElement) {
-		const allCards = Array.from(this.gridWrapper.querySelectorAll('.masonry-card')) as HTMLElement[];
+		const allCards = Array.from(this.gridWrapper.querySelectorAll('.masonry-card'));
 		const si = allCards.indexOf(this.lastSelectedEl!);
 		const ei = allCards.indexOf(card);
 		if (si === -1 || ei === -1) return;
@@ -903,12 +906,12 @@ export class MasonryView extends ItemView {
 			if (!file) continue;
 			try {
 				if (permanent) await this.app.vault.delete(file, true);
-				else await this.app.vault.trash(file, true);
+				else if (file instanceof TFile) await this.app.fileManager.trashFile(file);
 			} catch (e) { console.error('Failed to delete', p, e); }
 		}
 		const count = this.selected.size;
 		this.selected.clear();
-		this.tagBarEl.style.display = 'none';
+		this.tagBarEl.addClass('masonry-hide');
 		new Notice(permanent ? `Permanently deleted ${count} item(s)` : `Moved ${count} item(s) to trash`);
 		await this.loadFolderOrBoard(this.currentPath);
 	}
@@ -948,7 +951,7 @@ export class MasonryView extends ItemView {
 		} else {
 			menu.addItem(i => i.setTitle('Delete').setIcon('trash').onClick(() => {
 				this.selected.add(item.path);
-				this.deleteSelected(false);
+				void this.deleteSelected(false);
 			}));
 		}
 		menu.showAtMouseEvent(e);

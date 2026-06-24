@@ -80,7 +80,7 @@ var ImageViewModal = class extends import_obsidian.Modal {
     if (!item)
       return;
     const file = this.app.vault.getAbstractFileByPath(item.path);
-    if (!file)
+    if (!(file instanceof import_obsidian.TFile))
       return;
     this.imgEl.setAttr("src", this.app.vault.getResourcePath(file));
     this.captionEl.setText(`${item.name}  \u2014  ${idx + 1} / ${this.images.length}`);
@@ -108,12 +108,14 @@ var PinSelectModal = class extends import_obsidian.Modal {
       const row = list.createDiv({ cls: "masonry-pin-row" });
       row.createSpan({ text: board.name.replace(/\.md$/i, "") });
       const btn = row.createEl("button", { cls: "mod-cta", text: "Pin" });
-      btn.addEventListener("click", async () => {
-        for (const p of this.paths) {
-          await this.plugin.addToPinBoard(p, board);
-        }
-        new import_obsidian.Notice(`Pinned ${this.paths.length} item(s) to "${board.name.replace(/\.md$/i, "")}"`);
-        this.close();
+      btn.addEventListener("click", () => {
+        void (async () => {
+          for (const p of this.paths) {
+            await this.plugin.addToPinBoard(p, board);
+          }
+          new import_obsidian.Notice(`Pinned ${this.paths.length} item(s) to "${board.name.replace(/\.md$/i, "")}"`);
+          this.close();
+        })();
       });
     }
     contentEl.createEl("hr");
@@ -124,20 +126,22 @@ var PinSelectModal = class extends import_obsidian.Modal {
       attr: { placeholder: "Board name\u2026", type: "text" }
     });
     const createBtn = createSec.createEl("button", { text: "Create & Pin" });
-    createBtn.addEventListener("click", async () => {
-      const name = input.value.trim();
-      if (!name) {
-        new import_obsidian.Notice("Enter a name");
-        return;
-      }
-      const file = await this.plugin.createPinBoard(name);
-      if (!file)
-        return;
-      for (const p of this.paths) {
-        await this.plugin.addToPinBoard(p, file);
-      }
-      new import_obsidian.Notice(`Board "${name}" created with ${this.paths.length} pin(s)`);
-      this.close();
+    createBtn.addEventListener("click", () => {
+      void (async () => {
+        const name = input.value.trim();
+        if (!name) {
+          new import_obsidian.Notice("Enter a name");
+          return;
+        }
+        const file = await this.plugin.createPinBoard(name);
+        if (!file)
+          return;
+        for (const p of this.paths) {
+          await this.plugin.addToPinBoard(p, file);
+        }
+        new import_obsidian.Notice(`Board "${name}" created with ${this.paths.length} pin(s)`);
+        this.close();
+      })();
     });
   }
   onClose() {
@@ -185,14 +189,14 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.gridWrapper = c.createDiv({ cls: "masonry-grid-wrapper" });
     this.setupDragDrop();
     (_a = this.scope) == null ? void 0 : _a.register(["Mod", "Shift"], "Backspace", () => {
-      this.deleteSelected(true);
+      void this.deleteSelected(true);
       return false;
     });
     (_b = this.scope) == null ? void 0 : _b.register([], "Delete", (e) => {
       if (e.ctrlKey || e.metaKey)
-        this.deleteSelected(true);
+        void this.deleteSelected(true);
       else
-        this.deleteSelected(false);
+        void this.deleteSelected(false);
       return false;
     });
     if (this.currentPath)
@@ -200,14 +204,16 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   // One-time drag-drop setup — document-level capture to intercept before Obsidian
   setupDragDrop() {
+    var _a;
+    const doc = (_a = window.activeDocument) != null ? _a : document;
     let lastDragTarget = null;
     const isMasonryTarget = (e) => {
-      var _a;
-      return !!((_a = e.target) == null ? void 0 : _a.closest(".masonry-grid-wrapper"));
+      var _a2;
+      return !!((_a2 = e.target) == null ? void 0 : _a2.closest(".masonry-grid-wrapper"));
     };
     const isNavTitle = (e) => {
-      var _a, _b;
-      return (_b = (_a = e.target) == null ? void 0 : _a.closest(".nav-file-title")) != null ? _b : null;
+      var _a2, _b;
+      return (_b = (_a2 = e.target) == null ? void 0 : _a2.closest(".nav-file-title")) != null ? _b : null;
     };
     const getSrc = (e) => {
       const dt = e.dataTransfer;
@@ -229,7 +235,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       return "";
     };
     const resolvePath = (raw) => {
-      var _a, _b, _c;
+      var _a2, _b, _c;
       const tryPath = (p) => {
         const file = this.app.vault.getAbstractFileByPath(p);
         return file ? file.path : null;
@@ -242,7 +248,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
         if (found)
           return found;
       }
-      const vaultPath = ((_b = (_a = this.app.vault.adapter).getFullPath) == null ? void 0 : _b.call(_a, "/")) || "";
+      const vaultPath = ((_b = (_a2 = this.app.vault.adapter).getFullPath) == null ? void 0 : _b.call(_a2, "/")) || "";
       if (vaultPath) {
         const norm = String(vaultPath).replace(/\\/g, "/").replace(/\/$/, "");
         const tryRel = (rel) => {
@@ -277,8 +283,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
       return raw;
     };
     const cleanBoardMarkers = () => {
-      document.querySelectorAll(".masonry-drop-board").forEach((el) => el.removeClass("masonry-drop-board"));
-      document.querySelectorAll(".masonry-drop-file-exp").forEach((el) => el.removeClass("masonry-drop-file-exp"));
+      doc.querySelectorAll(".masonry-drop-board").forEach((el) => el.removeClass("masonry-drop-board"));
+      doc.querySelectorAll(".masonry-drop-file-exp").forEach((el) => el.removeClass("masonry-drop-file-exp"));
     };
     const onDragOver = (e) => {
       if (isMasonryTarget(e)) {
@@ -323,11 +329,11 @@ var MasonryView = class extends import_obsidian2.ItemView {
       lastDragTarget = null;
     };
     const onDrop = async (e) => {
-      var _a;
+      var _a2;
       const src = getSrc(e);
       if (!src)
         return;
-      const multiRaw = (_a = e.dataTransfer) == null ? void 0 : _a.getData("text/x-masonry-items");
+      const multiRaw = (_a2 = e.dataTransfer) == null ? void 0 : _a2.getData("text/x-masonry-items");
       const rawPaths = multiRaw ? JSON.parse(multiRaw) : [src];
       const paths = rawPaths.map(resolvePath).filter(Boolean);
       if (!paths.length)
@@ -364,16 +370,18 @@ var MasonryView = class extends import_obsidian2.ItemView {
       }
     };
     const opts = { capture: true };
-    document.addEventListener("dragover", onDragOver, opts);
-    document.addEventListener("dragleave", onDragLeave, opts);
-    document.addEventListener("drop", onDrop, opts);
+    doc.addEventListener("dragover", onDragOver, opts);
+    doc.addEventListener("dragleave", onDragLeave, opts);
+    doc.addEventListener("drop", onDrop, opts);
     this._dragHandlers = { dragover: onDragOver, dragleave: onDragLeave, drop: onDrop };
   }
   async onClose() {
+    var _a;
     this.containerEl.empty();
     if (this._dragHandlers) {
+      const doc = (_a = window.activeDocument) != null ? _a : document;
       for (const [evt, fn] of Object.entries(this._dragHandlers)) {
-        document.removeEventListener(evt, fn, { capture: true });
+        doc.removeEventListener(evt, fn, { capture: true });
       }
     }
   }
@@ -435,8 +443,10 @@ var MasonryView = class extends import_obsidian2.ItemView {
       attr: { "aria-label": "Edit board file" }
     });
     (0, import_obsidian2.setIcon)(this.editBoardBtnEl, "pencil");
-    this.editBoardBtnEl.style.display = "none";
-    this.editBoardBtnEl.addEventListener("click", () => this.editCurrentBoard());
+    this.editBoardBtnEl.addClass("masonry-hide");
+    this.editBoardBtnEl.addEventListener("click", () => {
+      void this.editCurrentBoard();
+    });
     const actions = row1.createDiv({ cls: "masonry-actions" });
     this.tagCloudBtnEl = actions.createEl("button", {
       cls: "masonry-action-btn",
@@ -455,9 +465,11 @@ var MasonryView = class extends import_obsidian2.ItemView {
       attr: { "aria-label": "Pin selected to board" }
     });
     (0, import_obsidian2.setIcon)(pinBtn, "pin");
-    pinBtn.addEventListener("click", () => this.showPinModal());
+    pinBtn.addEventListener("click", () => {
+      void this.showPinModal();
+    });
     this.tagBarEl = this.headerEl.createDiv({ cls: "masonry-tag-bar" });
-    this.tagBarEl.style.display = "none";
+    this.tagBarEl.addClass("masonry-hide");
     this.tagBarEl.createSpan({ cls: "masonry-tag-label", text: "Tags: " });
     this.tagChipsEl = this.tagBarEl.createDiv({ cls: "masonry-tag-chips" });
     this.tagInputEl = this.tagBarEl.createEl("input", {
@@ -467,15 +479,15 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.tagInputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === ",") {
         e.preventDefault();
-        this.addTagFromInput();
+        void this.addTagFromInput();
       } else if (e.key === "Backspace" && this.tagInputEl.value === "") {
         const chips = this.getCurrentChips();
         if (chips.length > 0)
-          this.removeTagAndSave(chips[chips.length - 1]);
+          void this.removeTagAndSave(chips[chips.length - 1]);
       }
     });
     this.tagCloudEl = this.headerEl.createDiv({ cls: "masonry-tag-cloud" });
-    this.tagCloudEl.style.display = "none";
+    this.tagCloudEl.addClass("masonry-hide");
   }
   // ── tag: auto-save on every change ──────────────────────
   getCurrentChips() {
@@ -532,10 +544,10 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   renderTagChipsFromSelection() {
     if (this.selected.size === 0) {
-      this.tagBarEl.style.display = "none";
+      this.tagBarEl.addClass("masonry-hide");
       return;
     }
-    this.tagBarEl.style.display = "flex";
+    this.tagBarEl.removeClass("masonry-hide");
     const allTags = /* @__PURE__ */ new Set();
     for (const p of this.selected) {
       for (const t of this.plugin.getItemTags(p))
@@ -549,7 +561,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       const del = chip.createSpan({ cls: "masonry-chip-x", text: "\xD7" });
       del.addEventListener("click", (e) => {
         e.stopPropagation();
-        this.removeTagAndSave(tag);
+        void this.removeTagAndSave(tag);
       });
     }
   }
@@ -560,23 +572,25 @@ var MasonryView = class extends import_obsidian2.ItemView {
   // ── tag cloud ───────────────────────────────────────────
   toggleTagCloud() {
     if (this.tagCloudVisible()) {
-      this.tagCloudEl.style.display = "none";
+      this.tagCloudEl.addClass("masonry-hide");
     } else {
       this.buildTagCloud();
-      this.tagCloudEl.style.display = "block";
-      setTimeout(() => {
+      this.tagCloudEl.removeClass("masonry-hide");
+      window.setTimeout(() => {
+        var _a;
+        const doc = (_a = window.activeDocument) != null ? _a : document;
         const handler = (e) => {
           if (!this.tagCloudEl.contains(e.target) && e.target !== this.tagCloudBtnEl) {
-            this.tagCloudEl.style.display = "none";
-            document.removeEventListener("click", handler);
+            this.tagCloudEl.addClass("masonry-hide");
+            doc.removeEventListener("click", handler);
           }
         };
-        document.addEventListener("click", handler);
+        doc.addEventListener("click", handler);
       }, 0);
     }
   }
   tagCloudVisible() {
-    return this.tagCloudEl.style.display !== "none";
+    return !this.tagCloudEl.hasClass("masonry-hide");
   }
   buildTagFreq() {
     if (!this.plugin.settings.fileTags)
@@ -608,7 +622,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       el.addEventListener("click", () => {
         this.searchEl.value = `#${tag}`;
         this.searchQuery = `#${tag}`;
-        this.tagCloudEl.style.display = "none";
+        this.tagCloudEl.addClass("masonry-hide");
         this.render();
       });
     }
@@ -617,7 +631,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   async loadFolder(path) {
     this.isBoardView = false;
     this.boardFile = null;
-    this.editBoardBtnEl.style.display = "none";
+    this.editBoardBtnEl.addClass("masonry-hide");
     if (this.historyIdx === -1 || this.history[this.historyIdx] !== path) {
       this.history = this.history.slice(0, this.historyIdx + 1);
       this.history.push(path);
@@ -625,8 +639,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
     }
     this.currentPath = path;
     this.selected.clear();
-    this.tagBarEl.style.display = "none";
-    this.tagCloudEl.style.display = "none";
+    this.tagBarEl.addClass("masonry-hide");
+    this.tagCloudEl.addClass("masonry-hide");
     this.updateUI();
     const folder = this.app.vault.getAbstractFileByPath(path);
     if (!folder || !(folder instanceof import_obsidian2.TFolder)) {
@@ -646,7 +660,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   async loadPinBoard(file) {
     this.isBoardView = true;
     this.boardFile = file;
-    this.editBoardBtnEl.style.display = "inline-flex";
+    this.editBoardBtnEl.removeClass("masonry-hide");
     const boardPath = file.path;
     if (this.historyIdx === -1 || this.history[this.historyIdx] !== boardPath) {
       this.history = this.history.slice(0, this.historyIdx + 1);
@@ -655,8 +669,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
     }
     this.currentPath = boardPath;
     this.selected.clear();
-    this.tagBarEl.style.display = "none";
-    this.tagCloudEl.style.display = "none";
+    this.tagBarEl.addClass("masonry-hide");
+    this.tagCloudEl.addClass("masonry-hide");
     this.updateUI();
     const pins = await this.plugin.getPinBoardPins(file);
     this.items = [];
@@ -689,7 +703,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       this.currentPath = this.history[this.historyIdx];
       this.selected.clear();
       this.updateUI();
-      this.loadFolderOrBoard(this.currentPath);
+      void this.loadFolderOrBoard(this.currentPath);
     }
   }
   goForward() {
@@ -698,7 +712,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       this.currentPath = this.history[this.historyIdx];
       this.selected.clear();
       this.updateUI();
-      this.loadFolderOrBoard(this.currentPath);
+      void this.loadFolderOrBoard(this.currentPath);
     }
   }
   updateUI() {
@@ -741,7 +755,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   async getNotePreview(path) {
     const file = this.app.vault.getAbstractFileByPath(path);
-    if (!file)
+    if (!(file instanceof import_obsidian2.TFile))
       return "";
     try {
       const content = await this.app.vault.read(file);
@@ -758,7 +772,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   async getFolderThumb(path) {
     const folder = this.app.vault.getAbstractFileByPath(path);
-    if (!folder)
+    if (!(folder instanceof import_obsidian2.TFolder))
       return void 0;
     for (const child of folder.children) {
       if (child instanceof import_obsidian2.TFile && IMAGE_EXTS.has(child.extension.toLowerCase()))
@@ -768,7 +782,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   getResourcePath(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    return file ? this.app.vault.getResourcePath(file) : "";
+    return file instanceof import_obsidian2.TFile ? this.app.vault.getResourcePath(file) : "";
   }
   // ── rendering ───────────────────────────────────────────
   render() {
@@ -849,7 +863,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
       }
       this.renderTagChipsFromSelection();
     });
-    card.addEventListener("dblclick", () => this.openItem(item));
+    card.addEventListener("dblclick", () => {
+      void this.openItem(item);
+    });
     card.addEventListener("dragstart", (e) => {
       var _a, _b;
       const dragPaths = this.selected.has(item.path) && this.selected.size > 1 ? [...this.selected] : [item.path];
@@ -875,12 +891,12 @@ var MasonryView = class extends import_obsidian2.ItemView {
     const showTags = this.plugin.settings.showTags;
     if (item.isFolder) {
       card.addClass("masonry-folder-card");
-      const header = this.buildCardHeader(card, "folder", item.name);
+      this.buildCardHeader(card, "folder", item.name);
       if (item.folderThumb) {
         const thumb = card.createDiv({ cls: "masonry-thumb" });
         const src = this.getResourcePath(item.folderThumb);
         if (src) {
-          const img = thumb.createEl("img", { cls: "masonry-img", attr: { src, loading: "lazy" } });
+          thumb.createEl("img", { cls: "masonry-img", attr: { src, loading: "lazy" } });
         }
       }
     } else if (item.type === "note") {
@@ -890,7 +906,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       const thumb = card.createDiv({ cls: "masonry-thumb" });
       if (item.notePreview) {
         const previewEl = thumb.createDiv({ cls: "masonry-note-preview" });
-        import_obsidian2.MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
+        void import_obsidian2.MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
       } else {
         thumb.createDiv({ cls: "masonry-note-preview masonry-note-empty", text: "\u2014 empty note \u2014" });
       }
@@ -1001,15 +1017,15 @@ var MasonryView = class extends import_obsidian2.ItemView {
       try {
         if (permanent)
           await this.app.vault.delete(file, true);
-        else
-          await this.app.vault.trash(file, true);
+        else if (file instanceof import_obsidian2.TFile)
+          await this.app.fileManager.trashFile(file);
       } catch (e) {
         console.error("Failed to delete", p, e);
       }
     }
     const count = this.selected.size;
     this.selected.clear();
-    this.tagBarEl.style.display = "none";
+    this.tagBarEl.addClass("masonry-hide");
     new import_obsidian2.Notice(permanent ? `Permanently deleted ${count} item(s)` : `Moved ${count} item(s) to trash`);
     await this.loadFolderOrBoard(this.currentPath);
   }
@@ -1051,7 +1067,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
     } else {
       menu.addItem((i) => i.setTitle("Delete").setIcon("trash").onClick(() => {
         this.selected.add(item.path);
-        this.deleteSelected(false);
+        void this.deleteSelected(false);
       }));
     }
     menu.showAtMouseEvent(e);
@@ -1102,6 +1118,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     this.injectedStyleEl = null;
   }
   async onload() {
+    var _a;
     await this.loadSettings();
     this.registerView(VIEW_TYPE_MASONRY, (leaf) => new MasonryView(leaf, this));
     this.app.workspace.onLayoutReady(() => this.updatePinBoardStyles());
@@ -1112,7 +1129,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
         const file = this.app.workspace.getActiveFile();
         if (file == null ? void 0 : file.parent) {
           if (!checking)
-            this.openMasonryView(file.parent.path);
+            void this.openMasonryView(file.parent.path);
           return true;
         }
         return false;
@@ -1125,7 +1142,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
         const file = this.app.workspace.getActiveFile();
         if (file == null ? void 0 : file.parent) {
           if (!checking)
-            this.toggleMasonryFolder(file.parent.path);
+            void this.toggleMasonryFolder(file.parent.path);
           return true;
         }
         return false;
@@ -1140,7 +1157,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
         if (this.isPinBoard(file)) {
           this._openingBoard = true;
           await this.openMasonryView(file.path);
-          setTimeout(() => {
+          window.setTimeout(() => {
             this._openingBoard = false;
           }, 500);
         }
@@ -1165,7 +1182,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
                 new import_obsidian3.Notice(`Pin board "${name}" created`);
                 this._openingBoard = true;
                 await this.openMasonryView(board.path);
-                setTimeout(() => {
+                window.setTimeout(() => {
                   this._openingBoard = false;
                 }, 500);
               }
@@ -1192,13 +1209,14 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
       this.app.vault.on("delete", (file) => this.handleDelete(file))
     );
     this.addSettingTab(new MasonrySettingTab(this.app, this));
+    const doc = (_a = window.activeDocument) != null ? _a : document;
     let lastClickPath = "";
     let lastClickTime = 0;
-    this.registerDomEvent(document, "click", (e) => {
-      var _a;
+    this.registerDomEvent(doc, "click", (e) => {
+      var _a2;
       if (e.button !== 0)
         return;
-      const content = (_a = e.target) == null ? void 0 : _a.closest(".nav-folder-title-content");
+      const content = (_a2 = e.target) == null ? void 0 : _a2.closest(".nav-folder-title-content");
       if (!content)
         return;
       const title = content.closest(".nav-folder-title");
@@ -1217,11 +1235,13 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
       lastClickTime = now;
       e.preventDefault();
       e.stopPropagation();
-      this.openMasonryView(path);
+      void this.openMasonryView(path);
     }, true);
   }
   onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_MASONRY);
+    if (this.injectedStyleEl) {
+      this.injectedStyleEl.remove();
+    }
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -1301,10 +1321,12 @@ Your pinned items will appear here.
     }
   }
   updatePinBoardStyles() {
+    var _a;
     if (!this.injectedStyleEl) {
-      this.injectedStyleEl = this.app.workspace.containerEl.doc.createElement("style");
+      const doc = (_a = window.activeDocument) != null ? _a : document;
+      this.injectedStyleEl = doc.createElement("style");
       this.injectedStyleEl.setAttr("data-masonry-icons", "");
-      document.head.appendChild(this.injectedStyleEl);
+      doc.head.appendChild(this.injectedStyleEl);
     }
     let css = "";
     const pinSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'%3E%3Cline x1='12' y1='17' x2='12' y2='22' stroke='white'/%3E%3Cpath d='M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z'/%3E%3C/svg%3E`;
@@ -1490,7 +1512,7 @@ Your pinned items will appear here.
       this.settings.fileTags[filePath] = [...tags];
     }
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file.extension === "md") {
+    if (file instanceof import_obsidian3.TFile && file.extension === "md") {
       try {
         await this.app.fileManager.processFrontMatter(file, (fm) => {
           fm.tags = tags.length > 0 ? [...tags] : void 0;
@@ -1515,7 +1537,7 @@ var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Masonry View Settings" });
+    new import_obsidian3.Setting(containerEl).setName("Masonry View Settings").setHeading();
     containerEl.createEl("p", {
       text: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.'
     });
@@ -1593,7 +1615,7 @@ var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
         }
       }).inputEl.type = "number"
     );
-    containerEl.createEl("h3", { text: "Masonry-enabled folders" });
+    new import_obsidian3.Setting(containerEl).setName("Masonry-enabled folders").setHeading();
     const list = containerEl.createEl("ul");
     if (this.plugin.settings.masonryFolders.length === 0) {
       list.createEl("li", { text: "None" });
@@ -1604,7 +1626,7 @@ var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
     }
     containerEl.createEl("hr");
     new import_obsidian3.Setting(containerEl).setName("Clear all folder assignments").setDesc("Remove masonry view from all folders").addButton(
-      (btn) => btn.setButtonText("Clear All").setWarning().onClick(async () => {
+      (btn) => btn.setButtonText("Clear All").setDestructive().onClick(async () => {
         this.plugin.settings.masonryFolders = [];
         await this.plugin.saveSettings();
         this.display();
