@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, TAbstractFile, Notice } from 'obsidian';
 import { MasonryView, VIEW_TYPE_MASONRY } from './masonry-view';
 import { PinSelectModal } from './modals';
+import { t } from './i18n';
 
 type FrontMatterData = Record<string, unknown>;
 
@@ -42,7 +43,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-masonry-view',
-			name: 'Open Masonry View for current folder',
+			name: t('cmd.openMasonryView'),
 			checkCallback: (checking: boolean) => {
 				const file = this.app.workspace.getActiveFile();
 				if (file?.parent) {
@@ -55,7 +56,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'toggle-masonry-folder',
-			name: 'Toggle masonry view for current folder',
+			name: t('cmd.toggleMasonryFolder'),
 			checkCallback: (checking: boolean) => {
 				const file = this.app.workspace.getActiveFile();
 				if (file?.parent) {
@@ -84,24 +85,24 @@ export default class ObsidianMasonryPlugin extends Plugin {
 				if (file instanceof TFolder) {
 					const isEnabled = this.settings.masonryFolders.includes(file.path);
 					menu.addItem((item) => {
-						item.setTitle(isEnabled ? 'Disable Masonry View' : 'Enable Masonry View')
+						item.setTitle(isEnabled ? t('menu.disableMasonry') : t('menu.enableMasonry'))
 							.setIcon('grid')
 							.onClick(async () => await this.toggleMasonryFolder(file.path));
 					});
 					menu.addItem((item) => {
-						item.setTitle('Open in Masonry View')
+						item.setTitle(t('menu.openMasonry'))
 							.setIcon('grid-3x3')
 							.onClick(async () => await this.openMasonryView(file.path));
 					});
 					menu.addSeparator();
 					menu.addItem((item) => {
-						item.setTitle('Create Pin Board here')
+						item.setTitle(t('menu.createPinBoard'))
 							.setIcon('pin')
 							.onClick(async () => {
 								const name = file.name + ' Board';
 								const board = await this.createPinBoard(name, file.path);
 								if (board) {
-									new Notice(`Pin board "${name}" created`);
+									new Notice(t('notice.boardCreated', { name }));
 									this._openingBoard = true;
 									await this.openMasonryView(board.path);
 									window.setTimeout(() => { this._openingBoard = false; }, 500);
@@ -112,7 +113,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 
 				if (file instanceof TFile) {
 					menu.addItem((item) => {
-						item.setTitle('Pin to board')
+						item.setTitle(t('menu.pinToBoard'))
 							.setIcon('pin')
 							.onClick(async () => {
 								const boards = this.getPinBoards();
@@ -183,10 +184,10 @@ export default class ObsidianMasonryPlugin extends Plugin {
 		const idx = this.settings.masonryFolders.indexOf(path);
 		if (idx > -1) {
 			this.settings.masonryFolders.splice(idx, 1);
-			new Notice(`Masonry View disabled for "${path}"`);
+			new Notice(t('notice.masonryDisabled', { path }));
 		} else {
 			this.settings.masonryFolders.push(path);
-			new Notice(`Masonry View enabled for "${path}"`);
+			new Notice(t('notice.masonryEnabled', { path }));
 		}
 		await this.saveSettings();
 		this.updatePinBoardStyles();
@@ -243,7 +244,7 @@ export default class ObsidianMasonryPlugin extends Plugin {
 			this.updatePinBoardStyles();
 			return file;
 		} catch {
-			new Notice('Failed to create pin board');
+			new Notice(t('notice.createBoardFailed'));
 			return null;
 		}
 	}
@@ -453,63 +454,106 @@ class MasonrySettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	getControlValue(key: string): unknown {
-		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
-	}
+	display(): void {
+		const { containerEl } = this;
+		containerEl.empty();
 
-	setControlValue(key: string, value: unknown): void {
-		(this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
-		void this.plugin.saveSettings();
-		this.refreshMasonryViews();
+		new Setting(containerEl).setName(t('sett.heading')).setDesc(t('sett.desc')).setHeading();
+
+		new Setting(containerEl)
+			.setName(t('sett.showNames'))
+			.setDesc(t('sett.showNamesDesc'))
+			.addToggle((c) => c.setValue(this.plugin.settings.showFileNames).onChange(async (v) => {
+				this.plugin.settings.showFileNames = v;
+				await this.plugin.saveSettings();
+				this.refreshMasonryViews();
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.showTags'))
+			.setDesc(t('sett.showTagsDesc'))
+			.addToggle((c) => c.setValue(this.plugin.settings.showTags).onChange(async (v) => {
+				this.plugin.settings.showTags = v;
+				await this.plugin.saveSettings();
+				this.refreshMasonryViews();
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.gap'))
+			.setDesc(t('sett.gapDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.itemGap)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.itemGap = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.columns'))
+			.setDesc(t('sett.columnsDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.columnCount)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.columnCount = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.noteMinH'))
+			.setDesc(t('sett.noteMinHDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.noteCardMinHeight)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.noteCardMinHeight = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.noteMaxH'))
+			.setDesc(t('sett.noteMaxHDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.noteCardMaxHeight)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.noteCardMaxHeight = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.noteFontSize'))
+			.setDesc(t('sett.noteFontSizeDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.noteCardFontSize)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.noteCardFontSize = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		new Setting(containerEl)
+			.setName(t('sett.folderCount'))
+			.setDesc(t('sett.folderCountDesc'))
+			.addText((c) => c.setValue(String(this.plugin.settings.folderCount)).onChange(async (v) => {
+				const n = parseInt(v, 10);
+				if (!isNaN(n)) { this.plugin.settings.folderCount = n; await this.plugin.saveSettings(); this.refreshMasonryViews(); }
+			}));
+
+		const folderSettings = new Setting(containerEl)
+			.setName(t('sett.masonryFolders'));
+		const el = folderSettings.controlEl;
+		const list = el.createEl('ul');
+		if (this.plugin.settings.masonryFolders.length === 0) {
+			list.createEl('li', { text: t('sett.none') });
+		} else {
+			for (const p of this.plugin.settings.masonryFolders) {
+				list.createEl('li', { text: p });
+			}
+		}
+		el.createEl('hr');
+		new Setting(el)
+			.setName(t('sett.clearAssignments'))
+			.setDesc(t('sett.clearAssignmentsDesc'))
+			.addButton((btn) =>
+				btn.setButtonText(t('sett.clearBtn')).setDestructive().onClick(async () => {
+					this.plugin.settings.masonryFolders = [];
+					await this.plugin.saveSettings();
+					this.display();
+					new Notice(t('notice.settingsCleared'));
+				})
+			);
 	}
 
 	private refreshMasonryViews() {
 		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY)) {
 			if (leaf.view instanceof MasonryView) leaf.view.render();
 		}
-	}
-
-	getSettingDefinitions(): import('obsidian').SettingDefinitionItem[] {
-		return [
-			{
-				name: 'Masonry View',
-				desc: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',
-			},
-			{ name: 'Show file names under items', desc: 'Display the filename below each masonry card', control: { type: 'toggle', key: 'showFileNames' } },
-			{ name: 'Show tags under items', desc: 'Display tags below each masonry card', control: { type: 'toggle', key: 'showTags' } },
-			{ name: 'Gap between items', desc: 'Spacing between cards in pixels', control: { type: 'number', key: 'itemGap' } },
-			{ name: 'Column count', desc: 'Number of masonry columns', control: { type: 'number', key: 'columnCount' } },
-			{ name: 'Note card min height', desc: 'Minimum card height for notes (px)', control: { type: 'number', key: 'noteCardMinHeight' } },
-			{ name: 'Note card max height', desc: 'Maximum card height for notes (px) — content exceeding this is clipped', control: { type: 'number', key: 'noteCardMaxHeight' } },
-			{ name: 'Note card font size', desc: 'Font size for the note preview text (px)', control: { type: 'number', key: 'noteCardFontSize' } },
-			{ name: 'Folders per row', desc: 'Number of folder cards in a single row', control: { type: 'number', key: 'folderCount' } },
-			{
-				name: 'Masonry-enabled folders',
-				render: (setting: Setting) => {
-					const el = setting.controlEl;
-					el.empty();
-					const list = el.createEl('ul');
-					if (this.plugin.settings.masonryFolders.length === 0) {
-						list.createEl('li', { text: 'None' });
-					} else {
-						for (const p of this.plugin.settings.masonryFolders) {
-							list.createEl('li', { text: p });
-						}
-					}
-					el.createEl('hr');
-					new Setting(el)
-						.setName('Clear all folder assignments')
-						.setDesc('Remove masonry view from all folders')
-						.addButton((btn) =>
-							btn.setButtonText('Clear All').setDestructive().onClick(async () => {
-								this.plugin.settings.masonryFolders = [];
-								await this.plugin.saveSettings();
-								this.update();
-								new Notice('Cleared all masonry folder settings');
-							})
-						);
-				},
-			},
-		];
 	}
 }

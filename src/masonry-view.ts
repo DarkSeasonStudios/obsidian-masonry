@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, TFolder, TFile, TAbstractFile, Notice, Menu, setIcon, MarkdownRenderer } from 'obsidian';
 import type ObsidianMasonryPlugin from './main';
 import { ImageViewModal, PinSelectModal } from './modals';
+import { t } from './i18n';
 
 export const VIEW_TYPE_MASONRY = 'obsidian-masonry-view';
 
@@ -52,8 +53,8 @@ export class MasonryView extends ItemView {
 
 	getViewType(): string { return VIEW_TYPE_MASONRY; }
 	getDisplayText(): string {
-		if (this.isBoardView && this.boardFile) return `Board: ${this.boardFile.name.replace(/\.md$/i, '')}`;
-		return this.currentPath ? `Masonry: ${this.currentPath}` : 'Masonry View';
+		if (this.isBoardView && this.boardFile) return t('view.tabBoard', { name: this.boardFile.name.replace(/\.md$/i, '') });
+		return this.currentPath ? t('view.tabMasonry', { path: this.currentPath }) : t('view.tabDefault');
 	}
 	getIcon(): string { return 'grid-3x3'; }
 
@@ -231,7 +232,7 @@ export class MasonryView extends ItemView {
 				for (const p of paths) {
 					await this.plugin.addToPinBoard(p, file);
 				}
-				new Notice(`Pinned to "${file.name.replace(/\.md$/i, '')}"`);
+				new Notice(t('notice.pinned', { name: file.name.replace(/\.md$/i, '') }));
 				await this.loadFolderOrBoard(this.currentPath);
 			}
 		};
@@ -285,10 +286,10 @@ export class MasonryView extends ItemView {
 		const row1 = this.headerEl.createDiv({ cls: 'masonry-hrow' });
 
 		const nav = row1.createDiv({ cls: 'masonry-nav' });
-		this.backBtn = nav.createEl('button', { cls: 'masonry-nav-btn', attr: { 'aria-label': 'Back' } });
+		this.backBtn = nav.createEl('button', { cls: 'masonry-nav-btn', attr: { 'aria-label': t('aria.back') } });
 		setIcon(this.backBtn, 'arrow-left');
 		this.backBtn.addEventListener('click', () => this.goBack());
-		this.fwdBtn = nav.createEl('button', { cls: 'masonry-nav-btn', attr: { 'aria-label': 'Forward' } });
+		this.fwdBtn = nav.createEl('button', { cls: 'masonry-nav-btn', attr: { 'aria-label': t('aria.forward') } });
 		setIcon(this.fwdBtn, 'arrow-right');
 		this.fwdBtn.addEventListener('click', () => this.goForward());
 
@@ -297,7 +298,7 @@ export class MasonryView extends ItemView {
 		setIcon(searchIcon, 'search');
 		this.searchEl = sc.createEl('input', {
 			cls: 'masonry-search-input',
-			attr: { placeholder: 'Search name or tag…', type: 'text' },
+			attr: { placeholder: t('placeholder.search'), type: 'text' },
 		});
 		this.searchEl.addEventListener('input', () => { this.searchQuery = this.searchEl.value; this.render(); });
 		this.searchEl.addEventListener('keydown', (e) => {
@@ -309,7 +310,7 @@ export class MasonryView extends ItemView {
 		// Edit Board button (shown only in board view)
 		this.editBoardBtnEl = row1.createEl('button', {
 			cls: 'masonry-action-btn masonry-edit-board-btn',
-			attr: { 'aria-label': 'Edit board file' },
+			attr: { 'aria-label': t('aria.editBoard') },
 		});
 		setIcon(this.editBoardBtnEl, 'pencil');
 		this.editBoardBtnEl.addClass('masonry-hide');
@@ -319,21 +320,21 @@ export class MasonryView extends ItemView {
 
 		this.tagCloudBtnEl = actions.createEl('button', {
 			cls: 'masonry-action-btn',
-			attr: { 'aria-label': 'Tag cloud' },
+			attr: { 'aria-label': t('aria.tagCloud') },
 		});
 		setIcon(this.tagCloudBtnEl, 'hash');
 		this.tagCloudBtnEl.addEventListener('click', () => this.toggleTagCloud());
 
 		const tagBtn = actions.createEl('button', {
 			cls: 'masonry-action-btn',
-			attr: { 'aria-label': 'Assign tags' },
+			attr: { 'aria-label': t('aria.assignTags') },
 		});
 		setIcon(tagBtn, 'tag');
 		tagBtn.addEventListener('click', () => this.focusTagInput());
 
 		const pinBtn = actions.createEl('button', {
 			cls: 'masonry-action-btn',
-			attr: { 'aria-label': 'Pin selected to board' },
+			attr: { 'aria-label': t('aria.pinSelected') },
 		});
 		setIcon(pinBtn, 'pin');
 		pinBtn.addEventListener('click', () => { void this.showPinModal(); });
@@ -341,11 +342,11 @@ export class MasonryView extends ItemView {
 		// tag bar (row 2)
 		this.tagBarEl = this.headerEl.createDiv({ cls: 'masonry-tag-bar' });
 		this.tagBarEl.addClass('masonry-hide');
-		this.tagBarEl.createSpan({ cls: 'masonry-tag-label', text: 'Tags: ' });
+		this.tagBarEl.createSpan({ cls: 'masonry-tag-label', text: t('label.tags') });
 		this.tagChipsEl = this.tagBarEl.createDiv({ cls: 'masonry-tag-chips' });
 		this.tagInputEl = this.tagBarEl.createEl('input', {
 			cls: 'masonry-tag-input',
-			attr: { placeholder: 'add tag…', type: 'text' },
+			attr: { placeholder: t('placeholder.addTag'), type: 'text' },
 		});
 		this.tagInputEl.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' || e.key === ',') {
@@ -476,13 +477,13 @@ export class MasonryView extends ItemView {
 
 	private buildTagCloud() {
 		this.tagCloudEl.empty();
-		this.tagCloudEl.createDiv({ cls: 'masonry-tc-title', text: 'Tag Cloud' });
+		this.tagCloudEl.createDiv({ cls: 'masonry-tc-title', text: t('label.tagCloud') });
 
 		const list = this.tagCloudEl.createDiv({ cls: 'masonry-tc-items' });
 		const sorted = [...this.tagFreq.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
 		if (sorted.length === 0) {
-			list.createSpan({ cls: 'masonry-tc-empty', text: 'No tags in this folder' });
+			list.createSpan({ cls: 'masonry-tc-empty', text: t('label.noTags') });
 		}
 
 		const maxFreq = sorted.length > 0 ? sorted[0][1] : 1;
@@ -519,7 +520,7 @@ export class MasonryView extends ItemView {
 		this.updateUI();
 
 		const folder = this.app.vault.getAbstractFileByPath(path);
-		if (!folder || !(folder instanceof TFolder)) { new Notice('Folder not found'); return; }
+		if (!folder || !(folder instanceof TFolder)) { new Notice(t('notice.folderNotFound')); return; }
 
 		this.items = [];
 		for (const child of folder.children) {
@@ -728,7 +729,7 @@ export class MasonryView extends ItemView {
 
 		if (hasSections.length === 0) {
 			this.gridWrapper.createDiv({ cls: 'masonry-empty' })
-				.setText(q ? 'No items match your search' : this.isBoardView ? 'This board is empty — pin some items!' : 'This folder is empty');
+				.setText(q ? t('notice.noMatch') : this.isBoardView ? t('notice.boardEmpty') : t('notice.folderEmpty'));
 		}
 	}
 
@@ -802,7 +803,7 @@ export class MasonryView extends ItemView {
 				const previewEl = thumb.createDiv({ cls: 'masonry-note-preview' });
 				void MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
 			} else {
-				thumb.createDiv({ cls: 'masonry-note-preview masonry-note-empty', text: '— empty note —' });
+				thumb.createDiv({ cls: 'masonry-note-preview masonry-note-empty', text: t('label.emptyNote') });
 			}
 		} else {
 			const thumb = card.createDiv({ cls: 'masonry-thumb' });
@@ -873,7 +874,7 @@ export class MasonryView extends ItemView {
 		if (item.type === 'image') {
 			const images = this.items.filter(i => i.type === 'image');
 			const idx = images.findIndex(i => i.path === item.path);
-			new ImageViewModal(this.app, this.plugin, images, idx >= 0 ? idx : 0).open();
+			new ImageViewModal(this.app, this.plugin, images, idx >= 0 ? idx : 0, this.boardFile).open();
 		} else {
 			const leaf = this.app.workspace.getMostRecentLeaf() ?? this.app.workspace.getLeaf();
 			await leaf.openFile(file);
@@ -894,7 +895,7 @@ export class MasonryView extends ItemView {
 					}
 				});
 			}
-			new Notice(`Removed ${removed.size} pin(s) from board`);
+			new Notice(t('notice.pinsRemoved', { count: removed.size }));
 			this.selected.clear();
 			await this.loadPinBoard(this.boardFile);
 			return;
@@ -909,7 +910,7 @@ export class MasonryView extends ItemView {
 		const count = this.selected.size;
 		this.selected.clear();
 		this.tagBarEl.addClass('masonry-hide');
-		new Notice(permanent ? `Permanently deleted ${count} item(s)` : `Moved ${count} item(s) to trash`);
+		new Notice(permanent ? t('notice.permanentDeleted', { count }) : t('notice.movedToTrash', { count }));
 		await this.loadFolderOrBoard(this.currentPath);
 	}
 
@@ -919,10 +920,10 @@ export class MasonryView extends ItemView {
 	}
 
 	async showPinModal() {
-		if (this.selected.size === 0) { new Notice('Select items first'); return; }
+		if (this.selected.size === 0) { new Notice(t('notice.selectFirst')); return; }
 		const boards = this.plugin.getPinBoards();
 		if (boards.length === 0) {
-			new Notice('No pin boards found. Right-click a folder → Create Pin Board here.');
+			new Notice(t('notice.noBoards'));
 			return;
 		}
 		new PinSelectModal(this.app, this.plugin, boards, [...this.selected]).open();
@@ -930,23 +931,23 @@ export class MasonryView extends ItemView {
 
 	private showCtxMenu(e: MouseEvent, item: FileItem) {
 		const menu = new Menu();
-		menu.addItem(i => i.setTitle('Open').setIcon('document').onClick(() => this.openItem(item)));
-		menu.addItem(i => i.setTitle('Pin to board').setIcon('pin').onClick(async () => {
+		menu.addItem(i => i.setTitle(t('menu.open')).setIcon('document').onClick(() => this.openItem(item)));
+		menu.addItem(i => i.setTitle(t('menu.pinToBoardShort')).setIcon('pin').onClick(async () => {
 			this.selected.add(item.path);
 			await this.showPinModal();
 		}));
-		menu.addItem(i => i.setTitle('Assign tags').setIcon('tag').onClick(() => {
+		menu.addItem(i => i.setTitle(t('menu.assignTags')).setIcon('tag').onClick(() => {
 			if (!this.selected.has(item.path)) { this.selected.add(item.path); }
 			this.focusTagInput();
 		}));
 		menu.addSeparator();
 		if (this.isBoardView) {
-			menu.addItem(i => i.setTitle('Remove from board').setIcon('trash').onClick(async () => {
+			menu.addItem(i => i.setTitle(t('menu.removeFromBoard')).setIcon('trash').onClick(async () => {
 				this.selected.add(item.path);
 				await this.deleteSelected(false);
 			}));
 		} else {
-			menu.addItem(i => i.setTitle('Delete').setIcon('trash').onClick(() => {
+			menu.addItem(i => i.setTitle(t('menu.delete')).setIcon('trash').onClick(() => {
 				this.selected.add(item.path);
 				void this.deleteSelected(false);
 			}));
@@ -961,7 +962,7 @@ export class MasonryView extends ItemView {
 		if (destFile instanceof TFile) {
 			if (this.plugin.isPinBoard(destFile)) {
 				await this.plugin.addToPinBoard(srcPath, destFile);
-				new Notice(`Pinned to "${destFile.name.replace(/\.md$/i, '')}"`);
+				new Notice(t('notice.pinned', { name: destFile.name.replace(/\.md$/i, '') }));
 				return;
 			}
 		}
@@ -972,7 +973,7 @@ export class MasonryView extends ItemView {
 			if (!srcFile) return;
 			try {
 				await this.app.fileManager.renameFile(srcFile, `${destPath}/${srcName}`);
-			} catch { new Notice('Move failed'); }
+			} catch { new Notice(t('notice.moveFailed')); }
 		}
 	}
 }

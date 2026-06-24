@@ -470,13 +470,34 @@
 }
 
 /* ── image viewer modal ──────────────────────────────────── */
+.masonry-image-modal {
+	opacity: 0;
+	border: none !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+.masonry-image-modal .modal-content {
+	overflow: hidden !important;
+	max-height: none !important;
+	border: none !important;
+	height: 100% !important;
+}
+
+.masonry-image-modal-bg {
+	opacity: 0;
+	background-color: rgba(0, 0, 0, 0.78) !important;
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+}
+
 .masonry-image-viewer {
 	padding: 0;
-	background: rgba(0, 0, 0, 0.92);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	width: 100%;
 	height: 100%;
 	position: relative;
 }
@@ -485,16 +506,18 @@
 	align-items: center;
 	justify-content: center;
 	flex: 1;
+	min-height: 0;
 	width: 100%;
-	padding: 20px;
+	padding: 0;
 	overflow: hidden;
 }
 .masonry-iv-img {
-	max-width: 100%;
-	max-height: 100%;
+	width: 100%;
+	height: 100%;
 	object-fit: contain;
 	border-radius: 4px;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+	filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.5));
+	cursor: grab;
 }
 .masonry-iv-nav {
 	position: absolute;
@@ -519,29 +542,69 @@
 
 .masonry-iv-bottom {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 16px;
-	padding: 12px 20px;
+	gap: 8px;
+	padding: 6px 20px;
 	width: 100%;
 	justify-content: center;
 	flex-shrink: 0;
 }
-.masonry-iv-caption {
-	color: rgba(255, 255, 255, 0.7);
-	font-size: 13px;
+.masonry-iv-name {
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 16px;
+	font-weight: 500;
 }
-.masonry-iv-close {
-	background: rgba(255, 255, 255, 0.12);
-	color: #fff;
-	border: 1px solid rgba(255, 255, 255, 0.25);
-	border-radius: 4px;
-	padding: 4px 14px;
+.masonry-iv-tags {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+.masonry-iv-tag-input {
+	width: 125px;
+	padding: 2px 6px;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 3px;
+	background: rgba(255, 255, 255, 0.08);
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 13px;
+	height: 22px;
+	outline: none;
+}
+.masonry-iv-tag-input:focus {
+	border-color: var(--interactive-accent, rgba(255, 255, 255, 0.6));
+}
+.masonry-iv-tag-input::placeholder {
+	color: rgba(255, 255, 255, 0.35);
+}
+.masonry-iv-dims {
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 16px;
+}
+.masonry-iv-zoom {
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 16px;
+}
+.masonry-iv-sep {
+	color: rgba(255, 255, 255, 0.2);
+	font-size: 16px;
+	margin: 0 2px;
+}
+.masonry-iv-pin-btn {
+	background: none;
+	border: none;
+	padding: 0 4px;
 	cursor: pointer;
-	font-size: 13px;
+	color: rgba(255, 255, 255, 0.5);
+	display: inline-flex;
+	align-items: center;
+	line-height: 1;
 }
-.masonry-iv-close:hover {
-	background: rgba(255, 255, 255, 0.2);
+.masonry-iv-pin-btn:hover {
+	color: rgba(255, 255, 255, 0.85);
 }
+
 
 /* ── tag-assign modal ───────────────────────────────────── */
 .masonry-tag-modal {
@@ -579,23 +642,24 @@
 	margin: 0 0 12px;
 	font-size: 18px;
 }
-.masonry-pin-list {
-	max-height: 300px;
-	overflow-y: auto;
-}
-.masonry-pin-row {
+.masonry-pin-select-row {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	padding: 8px 0;
-	border-bottom: 1px solid var(--background-modifier-border);
+	gap: 8px;
+	margin-bottom: 12px;
 }
-.masonry-pin-row span {
-	font-size: 14px;
+.masonry-pin-select {
+	flex: 1;
+	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	outline: none;
 }
-.masonry-pin-row button {
-	font-size: 12px;
-	padding: 2px 12px;
+.masonry-pin-select:focus {
+	border-color: var(--interactive-accent);
 }
 .masonry-pin-create {
 	margin-top: 12px;

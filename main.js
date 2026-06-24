@@ -23,27 +23,346 @@ __export(main_exports, {
   default: () => ObsidianMasonryPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/masonry-view.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
 
 // src/modals.ts
+var import_obsidian2 = require("obsidian");
+
+// src/i18n.ts
 var import_obsidian = require("obsidian");
-var ImageViewModal = class extends import_obsidian.Modal {
-  constructor(app, plugin, images, startIdx) {
+var locales = {
+  en: {
+    "cmd.openMasonryView": "Open Masonry View for current folder",
+    "cmd.toggleMasonryFolder": "Toggle masonry view for current folder",
+    "menu.enableMasonry": "Enable Masonry View",
+    "menu.disableMasonry": "Disable Masonry View",
+    "menu.openMasonry": "Open in Masonry View",
+    "menu.createPinBoard": "Create Pin Board here",
+    "menu.pinToBoard": "Pin to board",
+    "notice.boardCreated": (v) => `Pin board "${v == null ? void 0 : v.name}" created`,
+    "notice.masonryDisabled": (v) => `Masonry View disabled for "${v == null ? void 0 : v.path}"`,
+    "notice.masonryEnabled": (v) => `Masonry View enabled for "${v == null ? void 0 : v.path}"`,
+    "notice.createBoardFailed": "Failed to create pin board",
+    "sett.heading": "Masonry View",
+    "sett.desc": 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.',
+    "sett.showNames": "Show file names under items",
+    "sett.showNamesDesc": "Display the filename below each masonry card",
+    "sett.showTags": "Show tags under items",
+    "sett.showTagsDesc": "Display tags below each masonry card",
+    "sett.gap": "Gap between items",
+    "sett.gapDesc": "Spacing between cards in pixels",
+    "sett.columns": "Column count",
+    "sett.columnsDesc": "Number of masonry columns",
+    "sett.noteMinH": "Note card min height",
+    "sett.noteMinHDesc": "Minimum card height for notes (px)",
+    "sett.noteMaxH": "Note card max height",
+    "sett.noteMaxHDesc": "Maximum card height for notes (px) \u2014 content exceeding this is clipped",
+    "sett.noteFontSize": "Note card font size",
+    "sett.noteFontSizeDesc": "Font size for the note preview text (px)",
+    "sett.folderCount": "Folders per row",
+    "sett.folderCountDesc": "Number of folder cards in a single row",
+    "sett.masonryFolders": "Masonry-enabled folders",
+    "sett.none": "None",
+    "sett.clearAssignments": "Clear all folder assignments",
+    "sett.clearAssignmentsDesc": "Remove masonry view from all folders",
+    "sett.clearBtn": "Clear All",
+    "notice.settingsCleared": "Cleared all masonry folder settings",
+    "view.tabBoard": (v) => `Board: ${v == null ? void 0 : v.name}`,
+    "view.tabMasonry": (v) => `Masonry: ${v == null ? void 0 : v.path}`,
+    "view.tabDefault": "Masonry View",
+    "aria.back": "Back",
+    "aria.forward": "Forward",
+    "aria.editBoard": "Edit board file",
+    "aria.tagCloud": "Tag cloud",
+    "aria.assignTags": "Assign tags",
+    "aria.pinSelected": "Pin selected to board",
+    "placeholder.search": "Search name or tag\u2026",
+    "placeholder.addTag": "add tag\u2026",
+    "label.tags": "Tags: ",
+    "label.tagCloud": "Tag Cloud",
+    "label.noTags": "No tags in this folder",
+    "label.emptyNote": "\u2014 empty note \u2014",
+    "notice.folderNotFound": "Folder not found",
+    "notice.noMatch": "No items match your search",
+    "notice.boardEmpty": "This board is empty \u2014 pin some items!",
+    "notice.folderEmpty": "This folder is empty",
+    "notice.pinsRemoved": (v) => `Removed ${v == null ? void 0 : v.count} pin(s) from board`,
+    "notice.permanentDeleted": (v) => `Permanently deleted ${v == null ? void 0 : v.count} item(s)`,
+    "notice.movedToTrash": (v) => `Moved ${v == null ? void 0 : v.count} item(s) to trash`,
+    "notice.selectFirst": "Select items first",
+    "notice.noBoards": "No pin boards found. Right-click a folder \u2192 Create Pin Board here.",
+    "notice.pinned": (v) => `Pinned to "${v == null ? void 0 : v.name}"`,
+    "notice.pinnedCount": (v) => `Pinned ${v == null ? void 0 : v.count} item(s) to "${v == null ? void 0 : v.name}"`,
+    "notice.moveFailed": "Move failed",
+    "menu.open": "Open",
+    "menu.pinToBoardShort": "Pin to board",
+    "menu.assignTags": "Assign tags",
+    "menu.removeFromBoard": "Remove from board",
+    "menu.delete": "Delete",
+    "modal.assignTagsTo": (v) => `Assign tags to ${v == null ? void 0 : v.count} item(s)`,
+    "placeholder.tagsCsv": "Enter tags, comma-separated (e.g. concept, art, mood)",
+    "btn.assign": "Assign",
+    "notice.enterTag": "Enter at least one tag",
+    "notice.tagsAssigned": (v) => `Assigned tags to ${v == null ? void 0 : v.count} item(s)`,
+    "btn.close": "Close",
+    "modal.addToPinBoard": "Add to Pin Board",
+    "btn.pin": "Pin",
+    "modal.createNewBoard": "Create New Board",
+    "placeholder.boardName": "Board name\u2026",
+    "btn.createAndPin": "Create & Pin",
+    "notice.enterName": "Enter a name",
+    "notice.boardCreatedWith": (v) => `Board "${v == null ? void 0 : v.name}" created with ${v == null ? void 0 : v.count} pin(s)`,
+    "modal.imageCounter": (v) => `${v == null ? void 0 : v.name}  \u2014  ${v == null ? void 0 : v.idx} / ${v == null ? void 0 : v.total}`,
+    "notice.pinnedToBoard": (v) => `Pinned ${v == null ? void 0 : v.count} item(s) to "${v == null ? void 0 : v.name}"`
+  },
+  ru: {
+    "cmd.openMasonryView": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C Masonry View \u0434\u043B\u044F \u0442\u0435\u043A\u0443\u0449\u0435\u0439 \u043F\u0430\u043F\u043A\u0438",
+    "cmd.toggleMasonryFolder": "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C/\u0432\u044B\u043A\u043B\u044E\u0447\u0438\u0442\u044C Masonry View \u0434\u043B\u044F \u043F\u0430\u043F\u043A\u0438",
+    "menu.enableMasonry": "\u0412\u0438\u0434 \u043F\u043B\u0438\u0442\u043A\u043E\u0439",
+    "menu.disableMasonry": "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u0438\u0434 \u043F\u043B\u0438\u0442\u043A\u043E\u0439",
+    "menu.openMasonry": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 Masonry View",
+    "menu.createPinBoard": "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0434\u043E\u0441\u043A\u0443 \u0437\u0430\u043C\u0435\u0442\u043E\u043A",
+    "menu.pinToBoard": "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u043A \u0434\u043E\u0441\u043A\u0435",
+    "notice.boardCreated": (v) => `\u0414\u043E\u0441\u043A\u0430 \xAB${v == null ? void 0 : v.name}\xBB \u0441\u043E\u0437\u0434\u0430\u043D\u0430`,
+    "notice.masonryDisabled": (v) => `Masonry View \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D \u0434\u043B\u044F \xAB${v == null ? void 0 : v.path}\xBB`,
+    "notice.masonryEnabled": (v) => `Masonry View \u0432\u043A\u043B\u044E\u0447\u0451\u043D \u0434\u043B\u044F \xAB${v == null ? void 0 : v.path}\xBB`,
+    "notice.createBoardFailed": "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u0434\u043E\u0441\u043A\u0443",
+    "sett.heading": "Masonry View",
+    "sett.desc": "\u0429\u0451\u043B\u043A\u043D\u0438\u0442\u0435 \u043F\u0440\u0430\u0432\u043E\u0439 \u043A\u043D\u043E\u043F\u043A\u043E\u0439 \u043F\u043E \u043F\u0430\u043F\u043A\u0435 \u0438 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \xAB\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 Masonry View\xBB \u0434\u043B\u044F \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0430 \u0432 \u043F\u043B\u0438\u0442\u043E\u0447\u043D\u043E\u0439 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0435.",
+    "sett.showNames": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0438\u043C\u0435\u043D\u0430 \u0444\u0430\u0439\u043B\u043E\u0432",
+    "sett.showNamesDesc": "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C \u0438\u043C\u044F \u0444\u0430\u0439\u043B\u0430 \u043F\u043E\u0434 \u043A\u0430\u0436\u0434\u043E\u0439 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u043E\u0439",
+    "sett.showTags": "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0442\u0435\u0433\u0438",
+    "sett.showTagsDesc": "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C \u0442\u0435\u0433\u0438 \u043F\u043E\u0434 \u043A\u0430\u0436\u0434\u043E\u0439 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u043E\u0439",
+    "sett.gap": "\u0420\u0430\u0441\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u043C\u0435\u0436\u0434\u0443 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u043C\u0438",
+    "sett.gapDesc": "\u0420\u0430\u0441\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u043C\u0435\u0436\u0434\u0443 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430\u043C\u0438 \u0432 \u043F\u0438\u043A\u0441\u0435\u043B\u044F\u0445",
+    "sett.columns": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043A\u043E\u043B\u043E\u043D\u043E\u043A",
+    "sett.columnsDesc": "\u0427\u0438\u0441\u043B\u043E \u043A\u043E\u043B\u043E\u043D\u043E\u043A \u0432 \u043F\u043B\u0438\u0442\u043E\u0447\u043D\u043E\u0439 \u0440\u0430\u0441\u043A\u043B\u0430\u0434\u043A\u0435",
+    "sett.noteMinH": "\u041C\u0438\u043D. \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
+    "sett.noteMinHDesc": "\u041C\u0438\u043D\u0438\u043C\u0430\u043B\u044C\u043D\u0430\u044F \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u0437\u0430\u043C\u0435\u0442\u043A\u0438 (px)",
+    "sett.noteMaxH": "\u041C\u0430\u043A\u0441. \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
+    "sett.noteMaxHDesc": "\u041C\u0430\u043A\u0441\u0438\u043C\u0430\u043B\u044C\u043D\u0430\u044F \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u0437\u0430\u043C\u0435\u0442\u043A\u0438 (px)",
+    "sett.noteFontSize": "\u0420\u0430\u0437\u043C\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
+    "sett.noteFontSizeDesc": "\u0420\u0430\u0437\u043C\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0437\u0430\u043C\u0435\u0442\u043A\u0438 (px)",
+    "sett.folderCount": "\u041F\u0430\u043F\u043E\u043A \u0432 \u0440\u044F\u0434\u0443",
+    "sett.folderCountDesc": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043A\u0430\u0440\u0442\u043E\u0447\u0435\u043A \u043F\u0430\u043F\u043E\u043A \u0432 \u043E\u0434\u043D\u043E\u043C \u0440\u044F\u0434\u0443",
+    "sett.masonryFolders": "\u041F\u0430\u043F\u043A\u0438 \u0441 Masonry View",
+    "sett.none": "\u041D\u0435\u0442",
+    "sett.clearAssignments": "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0432\u0441\u0435 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F",
+    "sett.clearAssignmentsDesc": "\u0423\u0431\u0440\u0430\u0442\u044C Masonry View \u0438\u0437 \u0432\u0441\u0435\u0445 \u043F\u0430\u043F\u043E\u043A",
+    "sett.clearBtn": "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0432\u0441\u0451",
+    "notice.settingsCleared": "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 Masonry \u043E\u0447\u0438\u0449\u0435\u043D\u044B",
+    "view.tabBoard": (v) => `\u0414\u043E\u0441\u043A\u0430: ${v == null ? void 0 : v.name}`,
+    "view.tabMasonry": (v) => `Masonry: ${v == null ? void 0 : v.path}`,
+    "view.tabDefault": "Masonry View",
+    "aria.back": "\u041D\u0430\u0437\u0430\u0434",
+    "aria.forward": "\u0412\u043F\u0435\u0440\u0451\u0434",
+    "aria.editBoard": "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0444\u0430\u0439\u043B \u0434\u043E\u0441\u043A\u0438",
+    "aria.tagCloud": "\u041E\u0431\u043B\u0430\u043A\u043E \u0442\u0435\u0433\u043E\u0432",
+    "aria.assignTags": "\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C \u0442\u0435\u0433\u0438",
+    "aria.pinSelected": "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u043E\u0435 \u043A \u0434\u043E\u0441\u043A\u0435",
+    "placeholder.search": "\u041F\u043E\u0438\u0441\u043A \u043F\u043E \u0438\u043C\u0435\u043D\u0438 \u0438\u043B\u0438 \u0442\u0435\u0433\u0443\u2026",
+    "placeholder.addTag": "\u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0442\u0435\u0433\u2026",
+    "label.tags": "\u0422\u0435\u0433\u0438: ",
+    "label.tagCloud": "\u041E\u0431\u043B\u0430\u043A\u043E \u0442\u0435\u0433\u043E\u0432",
+    "label.noTags": "\u041D\u0435\u0442 \u0442\u0435\u0433\u043E\u0432 \u0432 \u044D\u0442\u043E\u0439 \u043F\u0430\u043F\u043A\u0435",
+    "label.emptyNote": "\u2014 \u043F\u0443\u0441\u0442\u0430\u044F \u0437\u0430\u043C\u0435\u0442\u043A\u0430 \u2014",
+    "notice.folderNotFound": "\u041F\u0430\u043F\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430",
+    "notice.noMatch": "\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E",
+    "notice.boardEmpty": "\u0414\u043E\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u0430 \u2014 \u043F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u044B!",
+    "notice.folderEmpty": "\u041F\u0430\u043F\u043A\u0430 \u043F\u0443\u0441\u0442\u0430",
+    "notice.pinsRemoved": (v) => `\u0423\u0434\u0430\u043B\u0435\u043D\u043E ${v == null ? void 0 : v.count} \u0431\u0443\u043B\u0430\u0432\u043E\u043A \u0441 \u0434\u043E\u0441\u043A\u0438`,
+    "notice.permanentDeleted": (v) => `\u041D\u0430\u0432\u0441\u0435\u0433\u0434\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u043E ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432)`,
+    "notice.movedToTrash": (v) => `\u041F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u043E ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432) \u0432 \u043A\u043E\u0440\u0437\u0438\u043D\u0443`,
+    "notice.selectFirst": "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u044D\u043B\u0435\u043C\u0435\u043D\u0442\u044B",
+    "notice.noBoards": "\u0414\u043E\u0441\u043A\u0438 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B. \u041D\u0430\u0436\u043C\u0438\u0442\u0435 \u043F\u0440\u0430\u0432\u043E\u0439 \u043A\u043D\u043E\u043F\u043A\u043E\u0439 \u043D\u0430 \u043F\u0430\u043F\u043A\u0443 \u2192 \u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0434\u043E\u0441\u043A\u0443.",
+    "notice.pinned": (v) => `\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u043E \u043A \xAB${v == null ? void 0 : v.name}\xBB`,
+    "notice.pinnedCount": (v) => `\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u043E ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432) \u043A \xAB${v == null ? void 0 : v.name}\xBB`,
+    "notice.moveFailed": "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C",
+    "menu.open": "\u041E\u0442\u043A\u0440\u044B\u0442\u044C",
+    "menu.pinToBoardShort": "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u043A \u0434\u043E\u0441\u043A\u0435",
+    "menu.assignTags": "\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C \u0442\u0435\u0433\u0438",
+    "menu.removeFromBoard": "\u0423\u0431\u0440\u0430\u0442\u044C \u0441 \u0434\u043E\u0441\u043A\u0438",
+    "menu.delete": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C",
+    "modal.assignTagsTo": (v) => `\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C \u0442\u0435\u0433\u0438 \u0434\u043B\u044F ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432)`,
+    "placeholder.tagsCsv": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0442\u0435\u0433\u0438 \u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E (\u043D\u0430\u043F\u0440. \u0438\u0434\u0435\u044F, \u0438\u0441\u043A\u0443\u0441\u0441\u0442\u0432\u043E, \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D\u0438\u0435)",
+    "btn.assign": "\u041D\u0430\u0437\u043D\u0430\u0447\u0438\u0442\u044C",
+    "notice.enterTag": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D \u0442\u0435\u0433",
+    "notice.tagsAssigned": (v) => `\u0422\u0435\u0433\u0438 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u044B \u0434\u043B\u044F ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432)`,
+    "btn.close": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+    "modal.addToPinBoard": "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043D\u0430 \u0434\u043E\u0441\u043A\u0443",
+    "btn.pin": "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C",
+    "modal.createNewBoard": "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u0434\u043E\u0441\u043A\u0443",
+    "placeholder.boardName": "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u0441\u043A\u0438\u2026",
+    "btn.createAndPin": "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0438 \u043F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C",
+    "notice.enterName": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435",
+    "notice.boardCreatedWith": (v) => `\u0414\u043E\u0441\u043A\u0430 \xAB${v == null ? void 0 : v.name}\xBB \u0441\u043E\u0437\u0434\u0430\u043D\u0430 \u0441 ${v == null ? void 0 : v.count} \u0431\u0443\u043B\u0430\u0432\u043A\u043E\u0439(\u0430\u043C\u0438)`,
+    "modal.imageCounter": (v) => `${v == null ? void 0 : v.name}  \u2014  ${v == null ? void 0 : v.idx} / ${v == null ? void 0 : v.total}`,
+    "notice.pinnedToBoard": (v) => `\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u043E ${v == null ? void 0 : v.count} \u044D\u043B\u0435\u043C\u0435\u043D\u0442(\u043E\u0432) \u043A \xAB${v == null ? void 0 : v.name}\xBB`
+  }
+};
+var DEFAULT_LANG = "en";
+function getUserLang() {
+  try {
+    const lang = (0, import_obsidian.getLanguage)().toLowerCase();
+    if (locales[lang])
+      return lang;
+    const short = lang.substring(0, 2);
+    if (locales[short])
+      return short;
+  } catch (e) {
+  }
+  return DEFAULT_LANG;
+}
+function t(key, vars) {
+  var _a, _b, _c;
+  const lang = getUserLang();
+  const entry = (_c = (_a = locales[lang]) == null ? void 0 : _a[key]) != null ? _c : (_b = locales[DEFAULT_LANG]) == null ? void 0 : _b[key];
+  if (typeof entry === "function")
+    return entry(vars);
+  if (typeof entry === "string") {
+    if (!vars)
+      return entry;
+    let str = entry;
+    for (const [k, v] of Object.entries(vars))
+      str = str.replace(`{${k}}`, String(v));
+    return str;
+  }
+  return key;
+}
+
+// src/modals.ts
+var ImageViewModal = class extends import_obsidian2.Modal {
+  constructor(app, plugin, images, startIdx, boardFile) {
     super(app);
+    this.imgEls = [];
+    this._activeIdx = 0;
+    this._initialShow = true;
+    this._boardFile = null;
+    this._currentPath = "";
+    this.scale = 1;
+    this.fitScale = 1;
+    this.fitToWindow = true;
+    this.translateX = 0;
+    this.translateY = 0;
+    this._targetScale = 1;
+    this._targetTranslateX = 0;
+    this._targetTranslateY = 0;
+    this._animId = null;
+    this._navTimer = null;
+    this.isDragging = false;
+    this.dragMoved = false;
+    this.dragStartX = 0;
+    this.dragStartY = 0;
+    this.dragTransX = 0;
+    this.dragTransY = 0;
+    this._onImgLoad = (e) => {
+      const img = e.currentTarget;
+      this.dimsEl.setText(`${img.naturalWidth}\xD7${img.naturalHeight}`);
+      if (!this.fitToWindow) {
+        img.style.width = `${img.naturalWidth}px`;
+        img.style.height = `${img.naturalHeight}px`;
+      }
+      this._updateFitScale(img);
+      this._updateZoomDisplay();
+    };
+    this._showContextMenu = (e) => {
+      e.preventDefault();
+      if (this.dragMoved)
+        return;
+      const menu = new import_obsidian2.Menu();
+      menu.addItem(
+        (item) => item.setTitle("\u041C\u0430\u0441\u0448\u0442\u0430\u0431 \u2192 100%").onClick(() => this._setZoom100())
+      );
+      menu.addItem(
+        (item) => item.setTitle("\u0426\u0435\u043D\u0442\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435").onClick(() => this._centerImage())
+      );
+      menu.addItem(
+        (item) => item.setTitle("\u0412\u043F\u0438\u0441\u0430\u0442\u044C \u0432 \u043E\u043A\u043D\u043E").setChecked(this.fitToWindow).onClick(() => this._toggleFitToWindow())
+      );
+      menu.addSeparator();
+      menu.addItem(
+        (item) => item.setTitle("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043F\u0440\u043E\u0432\u043E\u0434\u043D\u0438\u043A\u0435").setIcon("folder-open").onClick(() => this._openInExplorer())
+      );
+      if (this._boardFile) {
+        menu.addItem(
+          (item) => item.setTitle("\u0423\u0431\u0440\u0430\u0442\u044C \u0441 \u0434\u043E\u0441\u043A\u0438").setIcon("log-out").onClick(() => {
+            void this._removeFromBoard();
+          })
+        );
+      } else {
+        menu.addItem(
+          (item) => item.setTitle("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0444\u0430\u0439\u043B").setIcon("trash-2").onClick(() => {
+            void this._deleteFile();
+          })
+        );
+      }
+      menu.showAtMouseEvent(e);
+    };
+    this._onWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      this._targetScale = Math.max(0.25, Math.min(6, this._targetScale + delta));
+      this._startAnim();
+    };
+    this._onMouseDown = (e) => {
+      if (e.button !== 2)
+        return;
+      e.preventDefault();
+      this.isDragging = true;
+      this.dragMoved = false;
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+      this.dragTransX = this.translateX;
+      this.dragTransY = this.translateY;
+      this.imgContainer.style.cursor = "grabbing";
+    };
+    this._onMouseMove = (e) => {
+      if (!this.isDragging)
+        return;
+      this.dragMoved = true;
+      this._targetTranslateX = this.dragTransX + (e.clientX - this.dragStartX);
+      this._targetTranslateY = this.dragTransY + (e.clientY - this.dragStartY);
+      this._startAnim();
+    };
+    this._onMouseUp = (e) => {
+      if (e.button !== 2 || !this.isDragging)
+        return;
+      this.isDragging = false;
+      this.imgContainer.style.cursor = "";
+    };
     this.plugin = plugin;
     this.images = images;
     this.curIdx = startIdx;
+    this._boardFile = boardFile != null ? boardFile : null;
+  }
+  get _imgEl() {
+    return this.imgEls[this._activeIdx];
   }
   onOpen() {
     var _a, _b, _c;
     const { contentEl } = this;
     contentEl.addClass("masonry-image-viewer");
     contentEl.empty();
+    this.modalEl.addClass("masonry-image-modal");
+    this.modalEl.style.width = "96vw";
+    this.modalEl.style.height = "96vh";
+    this.modalEl.style.maxWidth = "none";
     this.imgContainer = contentEl.createDiv({ cls: "masonry-iv-container" });
-    this.imgEl = this.imgContainer.createEl("img", { cls: "masonry-iv-img" });
+    this.imgContainer.style.position = "relative";
+    this.imgEls[0] = this.imgContainer.createEl("img", { cls: "masonry-iv-img" });
+    this.imgEls[1] = this.imgContainer.createEl("img", { cls: "masonry-iv-img" });
+    for (const el of this.imgEls) {
+      el.style.position = "absolute";
+      el.style.inset = "0";
+      el.style.pointerEvents = "none";
+      el.style.transition = "opacity 0.2s ease";
+      el.addEventListener("load", this._onImgLoad);
+    }
+    this.imgEls[0].style.pointerEvents = "auto";
+    this.imgEls[1].style.opacity = "0";
     this.leftNav = contentEl.createDiv({ cls: "masonry-iv-nav masonry-iv-nav-left" });
     this.leftNav.setText("\u2039");
     this.leftNav.addEventListener("click", () => this.nav(-1));
@@ -51,9 +370,45 @@ var ImageViewModal = class extends import_obsidian.Modal {
     this.rightNav.setText("\u203A");
     this.rightNav.addEventListener("click", () => this.nav(1));
     const bottom = contentEl.createDiv({ cls: "masonry-iv-bottom" });
-    this.captionEl = bottom.createDiv({ cls: "masonry-iv-caption" });
-    const closeBtn = bottom.createEl("button", { cls: "masonry-iv-close", text: "Close" });
-    closeBtn.addEventListener("click", () => this.close());
+    this.nameEl = bottom.createSpan({ cls: "masonry-iv-name" });
+    this.dimsEl = bottom.createSpan({ cls: "masonry-iv-dims" });
+    this.zoomEl = bottom.createSpan({ cls: "masonry-iv-zoom" });
+    bottom.createSpan({ cls: "masonry-iv-sep", text: "|" });
+    const pinBtn = bottom.createEl("button", { cls: "masonry-iv-pin-btn" });
+    (0, import_obsidian2.setIcon)(pinBtn, "pin");
+    pinBtn.addEventListener("click", (e) => {
+      const rect = pinBtn.getBoundingClientRect();
+      const menu = new import_obsidian2.Menu();
+      const boards = this.plugin.getPinBoards();
+      for (const board of boards) {
+        menu.addItem(
+          (item) => item.setTitle(board.name.replace(/\.md$/i, "")).onClick(() => {
+            void (async () => {
+              await this.plugin.addToPinBoard(this._currentPath, board);
+              new import_obsidian2.Notice(`\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u043E \u043A ${board.name.replace(/\.md$/i, "")}`);
+            })();
+          })
+        );
+      }
+      menu.addSeparator();
+      menu.addItem(
+        (item) => item.setTitle("\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0434\u043E\u0441\u043A\u0443").onClick(() => this._pinToBoard())
+      );
+      menu.showAtPosition({ x: rect.left, y: rect.bottom });
+    });
+    this._tagInputEl = bottom.createEl("input", {
+      cls: "masonry-iv-tag-input",
+      attr: { type: "text", placeholder: "\u0422\u0435\u0433..." }
+    });
+    this.tagsEl = bottom.createDiv({ cls: "masonry-iv-tags" });
+    this._tagInputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const val = this._tagInputEl.value.trim();
+        if (val)
+          this._addTag(val);
+      }
+    });
     (_a = this.scope) == null ? void 0 : _a.register([], "ArrowLeft", () => {
       this.nav(-1);
       return false;
@@ -66,7 +421,194 @@ var ImageViewModal = class extends import_obsidian.Modal {
       this.close();
       return false;
     });
+    this.imgContainer.addEventListener("wheel", this._onWheel, { passive: false });
+    this.imgContainer.addEventListener("mousedown", this._onMouseDown);
+    this.imgContainer.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("mousemove", this._onMouseMove);
+    document.addEventListener("mouseup", this._onMouseUp);
     this.show(this.curIdx);
+    requestAnimationFrame(() => {
+      this.modalEl.style.transition = "opacity 0.3s ease";
+      this.modalEl.style.opacity = "1";
+      const bg = this.modalEl.previousElementSibling;
+      if (bg) {
+        bg.style.transition = "opacity 0.3s ease";
+        bg.style.opacity = "1";
+      }
+    });
+  }
+  close() {
+    this.modalEl.style.transition = "opacity 0.3s ease";
+    this.modalEl.style.opacity = "0";
+    const bg = this.modalEl.previousElementSibling;
+    if (bg) {
+      bg.style.transition = "opacity 0.3s ease";
+      bg.style.opacity = "0";
+    }
+    window.setTimeout(() => super.close(), 300);
+  }
+  onClose() {
+    if (this._animId !== null)
+      cancelAnimationFrame(this._animId);
+    if (this._navTimer !== null)
+      clearTimeout(this._navTimer);
+    document.removeEventListener("mousemove", this._onMouseMove);
+    document.removeEventListener("mouseup", this._onMouseUp);
+    this.contentEl.empty();
+  }
+  _updateFitScale(img) {
+    const el = img != null ? img : this._imgEl;
+    if (!this.fitToWindow || !el.naturalWidth) {
+      this.fitScale = 1;
+      return;
+    }
+    const cw = this.imgContainer.clientWidth;
+    const ch = this.imgContainer.clientHeight;
+    const sx = cw / el.naturalWidth;
+    const sy = ch / el.naturalHeight;
+    this.fitScale = Math.min(sx, sy);
+  }
+  _updateZoomDisplay() {
+    const pct = Math.round(this.fitScale * this.scale * 100);
+    this.zoomEl.setText(`${pct}%`);
+  }
+  _setZoom100() {
+    this.fitToWindow = false;
+    this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
+    this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
+    this._imgEl.style.objectFit = "";
+    this._targetScale = 1;
+    this._targetTranslateX = 0;
+    this._targetTranslateY = 0;
+    this.fitScale = 1;
+    this._startAnim();
+  }
+  _centerImage() {
+    this._targetTranslateX = 0;
+    this._targetTranslateY = 0;
+    this._startAnim();
+  }
+  _toggleFitToWindow() {
+    this.fitToWindow = !this.fitToWindow;
+    if (this.fitToWindow) {
+      this._imgEl.style.objectFit = "";
+      this._imgEl.style.width = "";
+      this._imgEl.style.height = "";
+      this._targetScale = 1;
+      this._targetTranslateX = 0;
+      this._targetTranslateY = 0;
+      this._updateFitScale();
+    } else {
+      this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
+      this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
+      this._imgEl.style.objectFit = "";
+      this.fitScale = 1;
+      this._targetScale = 1;
+      this._targetTranslateX = 0;
+      this._targetTranslateY = 0;
+    }
+    this._startAnim();
+  }
+  _renderTags() {
+    const tags = this.plugin.getItemTags ? this.plugin.getItemTags(this._currentPath) : [];
+    this.tagsEl.empty();
+    for (const tag of tags) {
+      const chip = this.tagsEl.createSpan({ cls: "masonry-chip" });
+      chip.createSpan({ cls: "masonry-chip-label", text: `#${tag}` });
+      const del = chip.createSpan({ cls: "masonry-chip-x", text: "\xD7" });
+      del.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._removeTag(tag);
+      });
+    }
+  }
+  async _addTag(tag) {
+    const tags = this.plugin.getItemTags ? this.plugin.getItemTags(this._currentPath) : [];
+    if (!tags.includes(tag)) {
+      await this.plugin.setItemTags(this._currentPath, [...tags, tag]);
+    }
+    this._renderTags();
+    this._tagInputEl.value = "";
+    this._tagInputEl.focus();
+  }
+  async _removeTag(tag) {
+    const tags = this.plugin.getItemTags ? this.plugin.getItemTags(this._currentPath) : [];
+    await this.plugin.setItemTags(this._currentPath, tags.filter((t2) => t2 !== tag));
+    this._renderTags();
+  }
+  _pinToBoard() {
+    const boards = this.plugin.getPinBoards();
+    new PinSelectModal(this.app, this.plugin, boards, [this._currentPath]).open();
+  }
+  _focusTagInput() {
+    var _a;
+    (_a = this._tagInputEl) == null ? void 0 : _a.focus();
+  }
+  _openInExplorer() {
+    const file = this.app.vault.getAbstractFileByPath(this._currentPath);
+    if (!file || !(file instanceof import_obsidian2.TFile))
+      return;
+    try {
+      const fullPath = this.app.vault.adapter.getFullPath(file.path);
+      window.require("electron").shell.showItemInFolder(fullPath);
+    } catch (e) {
+      console.error("Failed to open in explorer", e);
+    }
+  }
+  async _removeFromBoard() {
+    if (!this._boardFile)
+      return;
+    await this.app.fileManager.processFrontMatter(this._boardFile, (fm) => {
+      const data = fm;
+      if (Array.isArray(data.pins)) {
+        data.pins = data.pins.filter((pin) => pin !== this._currentPath);
+      }
+    });
+    new import_obsidian2.Notice("\u0423\u0431\u0440\u0430\u043D\u043E \u0441 \u0434\u043E\u0441\u043A\u0438");
+    this.close();
+  }
+  async _deleteFile() {
+    const file = this.app.vault.getAbstractFileByPath(this._currentPath);
+    if (!file || !(file instanceof import_obsidian2.TFile))
+      return;
+    await this.app.fileManager.trashFile(file);
+    new import_obsidian2.Notice("\u0424\u0430\u0439\u043B \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0451\u043D \u0432 \u043A\u043E\u0440\u0437\u0438\u043D\u0443");
+    this.close();
+  }
+  _applyTransform() {
+    this._imgEl.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+    this._updateZoomDisplay();
+  }
+  _startAnim() {
+    if (this._animId !== null)
+      return;
+    this._animId = requestAnimationFrame(() => this._animate());
+  }
+  _animate() {
+    const lerpSpeed = this.isDragging ? 0.35 : 0.18;
+    this.scale += (this._targetScale - this.scale) * lerpSpeed;
+    this.translateX += (this._targetTranslateX - this.translateX) * lerpSpeed;
+    this.translateY += (this._targetTranslateY - this.translateY) * lerpSpeed;
+    this._applyTransform();
+    const done = Math.abs(this.scale - this._targetScale) < 1e-3 && Math.abs(this.translateX - this._targetTranslateX) < 0.5 && Math.abs(this.translateY - this._targetTranslateY) < 0.5;
+    if (done) {
+      this.scale = this._targetScale;
+      this.translateX = this._targetTranslateX;
+      this.translateY = this._targetTranslateY;
+      this._applyTransform();
+      this._animId = null;
+    } else {
+      this._animId = requestAnimationFrame(() => this._animate());
+    }
+  }
+  _resetZoom() {
+    this._targetScale = 1;
+    this._targetTranslateX = 0;
+    this._targetTranslateY = 0;
+    this.scale = 1;
+    this.translateX = 0;
+    this.translateY = 0;
+    this._applyTransform();
   }
   nav(dir) {
     const next = this.curIdx + dir;
@@ -80,18 +622,61 @@ var ImageViewModal = class extends import_obsidian.Modal {
     if (!item)
       return;
     const file = this.app.vault.getAbstractFileByPath(item.path);
-    if (!(file instanceof import_obsidian.TFile))
+    if (!(file instanceof import_obsidian2.TFile))
       return;
-    this.imgEl.setAttr("src", this.app.vault.getResourcePath(file));
-    this.captionEl.setText(`${item.name}  \u2014  ${idx + 1} / ${this.images.length}`);
+    this._currentPath = item.path;
+    if (this._navTimer !== null) {
+      clearTimeout(this._navTimer);
+      this._navTimer = null;
+    }
+    if (this._initialShow) {
+      this._initialShow = false;
+      this.imgEls[0].setAttr("src", this.app.vault.getResourcePath(file));
+      this.nameEl.setText(item.name);
+      this._renderTags();
+      this.dimsEl.setText("");
+      this.zoomEl.setText("");
+      this.leftNav.toggleClass("masonry-iv-hidden", idx === 0);
+      this.rightNav.toggleClass("masonry-iv-hidden", idx === this.images.length - 1);
+      this._resetZoom();
+      return;
+    }
+    const nextIdx = 1 - this._activeIdx;
+    const prev = this.imgEls[this._activeIdx];
+    const next = this.imgEls[nextIdx];
+    next.style.transform = prev.style.transform || "";
+    next.style.width = prev.style.width || "";
+    next.style.height = prev.style.height || "";
+    next.style.objectFit = prev.style.objectFit || "";
+    next.setAttr("src", this.app.vault.getResourcePath(file));
     this.leftNav.toggleClass("masonry-iv-hidden", idx === 0);
     this.rightNav.toggleClass("masonry-iv-hidden", idx === this.images.length - 1);
-  }
-  onClose() {
-    this.contentEl.empty();
+    prev.style.opacity = "0";
+    next.style.opacity = "1";
+    next.style.pointerEvents = "auto";
+    prev.style.pointerEvents = "none";
+    this._activeIdx = nextIdx;
+    this._renderTags();
+    const textEls = [this.nameEl, this.dimsEl, this.zoomEl];
+    for (const el of textEls) {
+      el.style.transition = "opacity 0.08s ease";
+      el.style.opacity = "0";
+    }
+    this._navTimer = window.setTimeout(() => {
+      this.nameEl.setText(item.name);
+      for (const el of textEls) {
+        el.style.transition = "opacity 0.12s ease";
+        el.style.opacity = "1";
+      }
+      this._navTimer = window.setTimeout(() => {
+        this._navTimer = null;
+        for (const el of textEls)
+          el.style.transition = "";
+      }, 120);
+    }, 80);
   }
 };
-var PinSelectModal = class extends import_obsidian.Modal {
+var PinSelectModal = class extends import_obsidian2.Modal {
   constructor(app, plugin, boards, paths) {
     super(app);
     this.plugin = plugin;
@@ -102,35 +687,44 @@ var PinSelectModal = class extends import_obsidian.Modal {
     const { contentEl } = this;
     contentEl.addClass("masonry-pin-modal");
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Add to Pin Board" });
-    const list = contentEl.createDiv({ cls: "masonry-pin-list" });
+    contentEl.createEl("h2", { text: t("modal.addToPinBoard") });
+    const row = contentEl.createDiv({ cls: "masonry-pin-select-row" });
+    const select = row.createEl("select", { cls: "masonry-pin-select" });
     for (const board of this.boards) {
-      const row = list.createDiv({ cls: "masonry-pin-row" });
-      row.createSpan({ text: board.name.replace(/\.md$/i, "") });
-      const btn = row.createEl("button", { cls: "mod-cta", text: "Pin" });
-      btn.addEventListener("click", () => {
-        void (async () => {
-          for (const p of this.paths) {
-            await this.plugin.addToPinBoard(p, board);
-          }
-          new import_obsidian.Notice(`Pinned ${this.paths.length} item(s) to "${board.name.replace(/\.md$/i, "")}"`);
-          this.close();
-        })();
+      select.createEl("option", {
+        text: board.name.replace(/\.md$/i, ""),
+        value: board.path
       });
     }
+    const pinBtn = row.createEl("button", { cls: "mod-cta" });
+    (0, import_obsidian2.setIcon)(pinBtn, "pin");
+    pinBtn.createSpan({ text: " " + t("btn.pin") });
+    pinBtn.addEventListener("click", () => {
+      void (async () => {
+        const selectedPath = select.value;
+        const board = this.boards.find((b) => b.path === selectedPath);
+        if (!board)
+          return;
+        for (const p of this.paths) {
+          await this.plugin.addToPinBoard(p, board);
+        }
+        new import_obsidian2.Notice(t("notice.pinnedToBoard", { count: this.paths.length, name: board.name.replace(/\.md$/i, "") }));
+        this.close();
+      })();
+    });
     contentEl.createEl("hr");
     const createSec = contentEl.createDiv({ cls: "masonry-pin-create" });
-    createSec.createEl("h3", { text: "Create New Board" });
+    createSec.createEl("h3", { text: t("modal.createNewBoard") });
     const input = createSec.createEl("input", {
       cls: "masonry-pin-name-input",
-      attr: { placeholder: "Board name\u2026", type: "text" }
+      attr: { placeholder: t("placeholder.boardName"), type: "text" }
     });
-    const createBtn = createSec.createEl("button", { text: "Create & Pin" });
+    const createBtn = createSec.createEl("button", { text: t("btn.createAndPin") });
     createBtn.addEventListener("click", () => {
       void (async () => {
         const name = input.value.trim();
         if (!name) {
-          new import_obsidian.Notice("Enter a name");
+          new import_obsidian2.Notice(t("notice.enterName"));
           return;
         }
         const file = await this.plugin.createPinBoard(name);
@@ -139,7 +733,7 @@ var PinSelectModal = class extends import_obsidian.Modal {
         for (const p of this.paths) {
           await this.plugin.addToPinBoard(p, file);
         }
-        new import_obsidian.Notice(`Board "${name}" created with ${this.paths.length} pin(s)`);
+        new import_obsidian2.Notice(t("notice.boardCreatedWith", { name, count: this.paths.length }));
         this.close();
       })();
     });
@@ -152,7 +746,7 @@ var PinSelectModal = class extends import_obsidian.Modal {
 // src/masonry-view.ts
 var VIEW_TYPE_MASONRY = "obsidian-masonry-view";
 var IMAGE_EXTS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico"]);
-var MasonryView = class extends import_obsidian2.ItemView {
+var MasonryView = class extends import_obsidian3.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this._dragHandlers = null;
@@ -174,8 +768,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   getDisplayText() {
     if (this.isBoardView && this.boardFile)
-      return `Board: ${this.boardFile.name.replace(/\.md$/i, "")}`;
-    return this.currentPath ? `Masonry: ${this.currentPath}` : "Masonry View";
+      return t("view.tabBoard", { name: this.boardFile.name.replace(/\.md$/i, "") });
+    return this.currentPath ? t("view.tabMasonry", { path: this.currentPath }) : t("view.tabDefault");
   }
   getIcon() {
     return "grid-3x3";
@@ -302,10 +896,10 @@ var MasonryView = class extends import_obsidian2.ItemView {
         if (!path2)
           return;
         const file2 = this.app.vault.getAbstractFileByPath(path2);
-        if (file2 instanceof import_obsidian2.TFolder) {
+        if (file2 instanceof import_obsidian3.TFolder) {
           card.addClass("masonry-drop-board");
           lastDragTarget = card;
-        } else if (file2 instanceof import_obsidian2.TFile && this.plugin.isPinBoard(file2)) {
+        } else if (file2 instanceof import_obsidian3.TFile && this.plugin.isPinBoard(file2)) {
           card.addClass("masonry-drop-board");
           lastDragTarget = card;
         }
@@ -318,7 +912,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       if (!path)
         return;
       const file = this.app.vault.getAbstractFileByPath(path);
-      if (file instanceof import_obsidian2.TFile && this.plugin.isPinBoard(file)) {
+      if (file instanceof import_obsidian3.TFile && this.plugin.isPinBoard(file)) {
         e.preventDefault();
         e.stopPropagation();
         navTitle.addClass("masonry-drop-file-exp");
@@ -358,14 +952,14 @@ var MasonryView = class extends import_obsidian2.ItemView {
       if (!targetPath)
         return;
       const file = this.app.vault.getAbstractFileByPath(targetPath);
-      if (file instanceof import_obsidian2.TFile && this.plugin.isPinBoard(file)) {
+      if (file instanceof import_obsidian3.TFile && this.plugin.isPinBoard(file)) {
         e.preventDefault();
         e.stopPropagation();
         cleanBoardMarkers();
         for (const p of paths) {
           await this.plugin.addToPinBoard(p, file);
         }
-        new import_obsidian2.Notice(`Pinned to "${file.name.replace(/\.md$/i, "")}"`);
+        new import_obsidian3.Notice(t("notice.pinned", { name: file.name.replace(/\.md$/i, "") }));
         await this.loadFolderOrBoard(this.currentPath);
       }
     };
@@ -401,7 +995,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   // ── entry point ─────────────────────────────────────────
   async loadFolderOrBoard(path) {
     const file = this.app.vault.getAbstractFileByPath(path);
-    if (file instanceof import_obsidian2.TFile && file.extension === "md" && this.plugin.isPinBoard(file)) {
+    if (file instanceof import_obsidian3.TFile && file.extension === "md" && this.plugin.isPinBoard(file)) {
       await this.loadPinBoard(file);
     } else {
       await this.loadFolder(path);
@@ -412,18 +1006,18 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.headerEl = c.createDiv({ cls: "masonry-header" });
     const row1 = this.headerEl.createDiv({ cls: "masonry-hrow" });
     const nav = row1.createDiv({ cls: "masonry-nav" });
-    this.backBtn = nav.createEl("button", { cls: "masonry-nav-btn", attr: { "aria-label": "Back" } });
-    (0, import_obsidian2.setIcon)(this.backBtn, "arrow-left");
+    this.backBtn = nav.createEl("button", { cls: "masonry-nav-btn", attr: { "aria-label": t("aria.back") } });
+    (0, import_obsidian3.setIcon)(this.backBtn, "arrow-left");
     this.backBtn.addEventListener("click", () => this.goBack());
-    this.fwdBtn = nav.createEl("button", { cls: "masonry-nav-btn", attr: { "aria-label": "Forward" } });
-    (0, import_obsidian2.setIcon)(this.fwdBtn, "arrow-right");
+    this.fwdBtn = nav.createEl("button", { cls: "masonry-nav-btn", attr: { "aria-label": t("aria.forward") } });
+    (0, import_obsidian3.setIcon)(this.fwdBtn, "arrow-right");
     this.fwdBtn.addEventListener("click", () => this.goForward());
     const sc = row1.createDiv({ cls: "masonry-search" });
     const searchIcon = sc.createSpan({ cls: "masonry-search-icon" });
-    (0, import_obsidian2.setIcon)(searchIcon, "search");
+    (0, import_obsidian3.setIcon)(searchIcon, "search");
     this.searchEl = sc.createEl("input", {
       cls: "masonry-search-input",
-      attr: { placeholder: "Search name or tag\u2026", type: "text" }
+      attr: { placeholder: t("placeholder.search"), type: "text" }
     });
     this.searchEl.addEventListener("input", () => {
       this.searchQuery = this.searchEl.value;
@@ -439,9 +1033,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.pathEl = row1.createDiv({ cls: "masonry-path" });
     this.editBoardBtnEl = row1.createEl("button", {
       cls: "masonry-action-btn masonry-edit-board-btn",
-      attr: { "aria-label": "Edit board file" }
+      attr: { "aria-label": t("aria.editBoard") }
     });
-    (0, import_obsidian2.setIcon)(this.editBoardBtnEl, "pencil");
+    (0, import_obsidian3.setIcon)(this.editBoardBtnEl, "pencil");
     this.editBoardBtnEl.addClass("masonry-hide");
     this.editBoardBtnEl.addEventListener("click", () => {
       void this.editCurrentBoard();
@@ -449,31 +1043,31 @@ var MasonryView = class extends import_obsidian2.ItemView {
     const actions = row1.createDiv({ cls: "masonry-actions" });
     this.tagCloudBtnEl = actions.createEl("button", {
       cls: "masonry-action-btn",
-      attr: { "aria-label": "Tag cloud" }
+      attr: { "aria-label": t("aria.tagCloud") }
     });
-    (0, import_obsidian2.setIcon)(this.tagCloudBtnEl, "hash");
+    (0, import_obsidian3.setIcon)(this.tagCloudBtnEl, "hash");
     this.tagCloudBtnEl.addEventListener("click", () => this.toggleTagCloud());
     const tagBtn = actions.createEl("button", {
       cls: "masonry-action-btn",
-      attr: { "aria-label": "Assign tags" }
+      attr: { "aria-label": t("aria.assignTags") }
     });
-    (0, import_obsidian2.setIcon)(tagBtn, "tag");
+    (0, import_obsidian3.setIcon)(tagBtn, "tag");
     tagBtn.addEventListener("click", () => this.focusTagInput());
     const pinBtn = actions.createEl("button", {
       cls: "masonry-action-btn",
-      attr: { "aria-label": "Pin selected to board" }
+      attr: { "aria-label": t("aria.pinSelected") }
     });
-    (0, import_obsidian2.setIcon)(pinBtn, "pin");
+    (0, import_obsidian3.setIcon)(pinBtn, "pin");
     pinBtn.addEventListener("click", () => {
       void this.showPinModal();
     });
     this.tagBarEl = this.headerEl.createDiv({ cls: "masonry-tag-bar" });
     this.tagBarEl.addClass("masonry-hide");
-    this.tagBarEl.createSpan({ cls: "masonry-tag-label", text: "Tags: " });
+    this.tagBarEl.createSpan({ cls: "masonry-tag-label", text: t("label.tags") });
     this.tagChipsEl = this.tagBarEl.createDiv({ cls: "masonry-tag-chips" });
     this.tagInputEl = this.tagBarEl.createEl("input", {
       cls: "masonry-tag-input",
-      attr: { placeholder: "add tag\u2026", type: "text" }
+      attr: { placeholder: t("placeholder.addTag"), type: "text" }
     });
     this.tagInputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === ",") {
@@ -531,7 +1125,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       return;
     for (const p of this.selected) {
       const existing = this.plugin.getItemTags(p);
-      const updated = existing.filter((t) => t !== tag);
+      const updated = existing.filter((t2) => t2 !== tag);
       await this.plugin.setItemTags(p, updated);
       const item = this.items.find((i) => i.path === p);
       if (item)
@@ -549,8 +1143,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.tagBarEl.removeClass("masonry-hide");
     const allTags = /* @__PURE__ */ new Set();
     for (const p of this.selected) {
-      for (const t of this.plugin.getItemTags(p))
-        allTags.add(t);
+      for (const t2 of this.plugin.getItemTags(p))
+        allTags.add(t2);
     }
     this.tagChipsEl.empty();
     const sorted = [...allTags].sort();
@@ -598,18 +1192,18 @@ var MasonryView = class extends import_obsidian2.ItemView {
       if (item.isFolder)
         continue;
       const tags = this.plugin.getItemTags(item.path);
-      for (const t of tags) {
-        this.tagFreq.set(t, (this.tagFreq.get(t) || 0) + 1);
+      for (const t2 of tags) {
+        this.tagFreq.set(t2, (this.tagFreq.get(t2) || 0) + 1);
       }
     }
   }
   buildTagCloud() {
     this.tagCloudEl.empty();
-    this.tagCloudEl.createDiv({ cls: "masonry-tc-title", text: "Tag Cloud" });
+    this.tagCloudEl.createDiv({ cls: "masonry-tc-title", text: t("label.tagCloud") });
     const list = this.tagCloudEl.createDiv({ cls: "masonry-tc-items" });
     const sorted = [...this.tagFreq.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     if (sorted.length === 0) {
-      list.createSpan({ cls: "masonry-tc-empty", text: "No tags in this folder" });
+      list.createSpan({ cls: "masonry-tc-empty", text: t("label.noTags") });
     }
     const maxFreq = sorted.length > 0 ? sorted[0][1] : 1;
     for (const [tag, freq] of sorted) {
@@ -641,8 +1235,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.tagCloudEl.addClass("masonry-hide");
     this.updateUI();
     const folder = this.app.vault.getAbstractFileByPath(path);
-    if (!folder || !(folder instanceof import_obsidian2.TFolder)) {
-      new import_obsidian2.Notice("Folder not found");
+    if (!folder || !(folder instanceof import_obsidian3.TFolder)) {
+      new import_obsidian3.Notice(t("notice.folderNotFound"));
       return;
     }
     this.items = [];
@@ -674,9 +1268,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
     this.items = [];
     for (const pinPath of pins) {
       const abs = this.app.vault.getAbstractFileByPath(pinPath);
-      if (abs instanceof import_obsidian2.TFolder) {
+      if (abs instanceof import_obsidian3.TFolder) {
         this.items.push({ path: abs.path, name: abs.name, type: "folder", isFolder: true, tags: this.plugin.getItemTags(abs.path) });
-      } else if (abs instanceof import_obsidian2.TFile) {
+      } else if (abs instanceof import_obsidian3.TFile) {
         const item = await this.toFileItem(abs);
         if (item) {
           item.tags = this.plugin.getItemTags(abs.path);
@@ -724,10 +1318,10 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   // ── file-item conversion ────────────────────────────────
   async toFileItem(file) {
-    if (file instanceof import_obsidian2.TFolder) {
+    if (file instanceof import_obsidian3.TFolder) {
       return { path: file.path, name: file.name, type: "folder", isFolder: true, tags: this.plugin.getItemTags(file.path) };
     }
-    if (!(file instanceof import_obsidian2.TFile))
+    if (!(file instanceof import_obsidian3.TFile))
       return null;
     const ext = file.extension.toLowerCase();
     const isImage = IMAGE_EXTS.has(ext);
@@ -753,7 +1347,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   async getNotePreview(path) {
     const file = this.app.vault.getAbstractFileByPath(path);
-    if (!(file instanceof import_obsidian2.TFile))
+    if (!(file instanceof import_obsidian3.TFile))
       return "";
     try {
       const content = await this.app.vault.read(file);
@@ -770,17 +1364,17 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   async getFolderThumb(path) {
     const folder = this.app.vault.getAbstractFileByPath(path);
-    if (!(folder instanceof import_obsidian2.TFolder))
+    if (!(folder instanceof import_obsidian3.TFolder))
       return void 0;
     for (const child of folder.children) {
-      if (child instanceof import_obsidian2.TFile && IMAGE_EXTS.has(child.extension.toLowerCase()))
+      if (child instanceof import_obsidian3.TFile && IMAGE_EXTS.has(child.extension.toLowerCase()))
         return child.path;
     }
     return void 0;
   }
   getResourcePath(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    return file instanceof import_obsidian2.TFile ? this.app.vault.getResourcePath(file) : "";
+    return file instanceof import_obsidian3.TFile ? this.app.vault.getResourcePath(file) : "";
   }
   // ── rendering ───────────────────────────────────────────
   render() {
@@ -790,7 +1384,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
     let folders = this.items.filter((i) => i.isFolder).sort((a, b) => a.name.localeCompare(b.name));
     let files = this.items.filter((i) => !i.isFolder).sort((a, b) => a.name.localeCompare(b.name));
     if (q) {
-      const match = (i) => i.name.toLowerCase().includes(q) || i.tags.some((t) => t.toLowerCase().includes(q));
+      const match = (i) => i.name.toLowerCase().includes(q) || i.tags.some((t2) => t2.toLowerCase().includes(q));
       folders = folders.filter(match);
       files = files.filter(match);
     }
@@ -836,7 +1430,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       others.forEach((item, idx) => this.createCardIn(cols[idx % colCount], item));
     }
     if (hasSections.length === 0) {
-      this.gridWrapper.createDiv({ cls: "masonry-empty" }).setText(q ? "No items match your search" : this.isBoardView ? "This board is empty \u2014 pin some items!" : "This folder is empty");
+      this.gridWrapper.createDiv({ cls: "masonry-empty" }).setText(q ? t("notice.noMatch") : this.isBoardView ? t("notice.boardEmpty") : t("notice.folderEmpty"));
     }
   }
   // create a card and attach all event listeners
@@ -902,9 +1496,9 @@ var MasonryView = class extends import_obsidian2.ItemView {
       const thumb = card.createDiv({ cls: "masonry-thumb" });
       if (item.notePreview) {
         const previewEl = thumb.createDiv({ cls: "masonry-note-preview" });
-        void import_obsidian2.MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
+        void import_obsidian3.MarkdownRenderer.render(this.app, item.notePreview, previewEl, item.path, this);
       } else {
-        thumb.createDiv({ cls: "masonry-note-preview masonry-note-empty", text: "\u2014 empty note \u2014" });
+        thumb.createDiv({ cls: "masonry-note-preview masonry-note-empty", text: t("label.emptyNote") });
       }
     } else {
       const thumb = card.createDiv({ cls: "masonry-thumb" });
@@ -924,8 +1518,8 @@ var MasonryView = class extends import_obsidian2.ItemView {
     }
     if (showTags && (item.type === "note" || item.tags.length > 0)) {
       const tagsEl = card.createDiv({ cls: "masonry-tags" });
-      for (const t of item.tags.slice(0, 5)) {
-        tagsEl.createSpan({ cls: "masonry-tag", text: `#${t}` });
+      for (const t2 of item.tags.slice(0, 5)) {
+        tagsEl.createSpan({ cls: "masonry-tag", text: `#${t2}` });
       }
       if (item.tags.length > 5)
         tagsEl.createSpan({ cls: "masonry-tag-more", text: `+${item.tags.length - 5}` });
@@ -934,7 +1528,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
   buildCardHeader(card, iconId, name) {
     const header = card.createDiv({ cls: "masonry-item-header" });
     const iconEl = header.createDiv({ cls: "masonry-item-icon" });
-    (0, import_obsidian2.setIcon)(iconEl, iconId);
+    (0, import_obsidian3.setIcon)(iconEl, iconId);
     header.createSpan({ cls: "masonry-item-name", text: name });
     return header;
   }
@@ -978,12 +1572,12 @@ var MasonryView = class extends import_obsidian2.ItemView {
       return;
     }
     const file = this.app.vault.getAbstractFileByPath(item.path);
-    if (!file || !(file instanceof import_obsidian2.TFile))
+    if (!file || !(file instanceof import_obsidian3.TFile))
       return;
     if (item.type === "image") {
       const images = this.items.filter((i) => i.type === "image");
       const idx = images.findIndex((i) => i.path === item.path);
-      new ImageViewModal(this.app, this.plugin, images, idx >= 0 ? idx : 0).open();
+      new ImageViewModal(this.app, this.plugin, images, idx >= 0 ? idx : 0, this.boardFile).open();
     } else {
       const leaf = (_a = this.app.workspace.getMostRecentLeaf()) != null ? _a : this.app.workspace.getLeaf();
       await leaf.openFile(file);
@@ -1002,7 +1596,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
           }
         });
       }
-      new import_obsidian2.Notice(`Removed ${removed.size} pin(s) from board`);
+      new import_obsidian3.Notice(t("notice.pinsRemoved", { count: removed.size }));
       this.selected.clear();
       await this.loadPinBoard(this.boardFile);
       return;
@@ -1012,7 +1606,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       if (!file)
         continue;
       try {
-        if (file instanceof import_obsidian2.TFile)
+        if (file instanceof import_obsidian3.TFile)
           await this.app.fileManager.trashFile(file);
       } catch (e) {
         console.error("Failed to delete", p, e);
@@ -1021,7 +1615,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
     const count = this.selected.size;
     this.selected.clear();
     this.tagBarEl.addClass("masonry-hide");
-    new import_obsidian2.Notice(permanent ? `Permanently deleted ${count} item(s)` : `Moved ${count} item(s) to trash`);
+    new import_obsidian3.Notice(permanent ? t("notice.permanentDeleted", { count }) : t("notice.movedToTrash", { count }));
     await this.loadFolderOrBoard(this.currentPath);
   }
   async pinItem(filePath) {
@@ -1030,24 +1624,24 @@ var MasonryView = class extends import_obsidian2.ItemView {
   }
   async showPinModal() {
     if (this.selected.size === 0) {
-      new import_obsidian2.Notice("Select items first");
+      new import_obsidian3.Notice(t("notice.selectFirst"));
       return;
     }
     const boards = this.plugin.getPinBoards();
     if (boards.length === 0) {
-      new import_obsidian2.Notice("No pin boards found. Right-click a folder \u2192 Create Pin Board here.");
+      new import_obsidian3.Notice(t("notice.noBoards"));
       return;
     }
     new PinSelectModal(this.app, this.plugin, boards, [...this.selected]).open();
   }
   showCtxMenu(e, item) {
-    const menu = new import_obsidian2.Menu();
-    menu.addItem((i) => i.setTitle("Open").setIcon("document").onClick(() => this.openItem(item)));
-    menu.addItem((i) => i.setTitle("Pin to board").setIcon("pin").onClick(async () => {
+    const menu = new import_obsidian3.Menu();
+    menu.addItem((i) => i.setTitle(t("menu.open")).setIcon("document").onClick(() => this.openItem(item)));
+    menu.addItem((i) => i.setTitle(t("menu.pinToBoardShort")).setIcon("pin").onClick(async () => {
       this.selected.add(item.path);
       await this.showPinModal();
     }));
-    menu.addItem((i) => i.setTitle("Assign tags").setIcon("tag").onClick(() => {
+    menu.addItem((i) => i.setTitle(t("menu.assignTags")).setIcon("tag").onClick(() => {
       if (!this.selected.has(item.path)) {
         this.selected.add(item.path);
       }
@@ -1055,12 +1649,12 @@ var MasonryView = class extends import_obsidian2.ItemView {
     }));
     menu.addSeparator();
     if (this.isBoardView) {
-      menu.addItem((i) => i.setTitle("Remove from board").setIcon("trash").onClick(async () => {
+      menu.addItem((i) => i.setTitle(t("menu.removeFromBoard")).setIcon("trash").onClick(async () => {
         this.selected.add(item.path);
         await this.deleteSelected(false);
       }));
     } else {
-      menu.addItem((i) => i.setTitle("Delete").setIcon("trash").onClick(() => {
+      menu.addItem((i) => i.setTitle(t("menu.delete")).setIcon("trash").onClick(() => {
         this.selected.add(item.path);
         void this.deleteSelected(false);
       }));
@@ -1070,14 +1664,14 @@ var MasonryView = class extends import_obsidian2.ItemView {
   // ── drag & drop ─────────────────────────────────────────
   async handleDropOnFolder(srcPath, destPath) {
     const destFile = this.app.vault.getAbstractFileByPath(destPath);
-    if (destFile instanceof import_obsidian2.TFile) {
+    if (destFile instanceof import_obsidian3.TFile) {
       if (this.plugin.isPinBoard(destFile)) {
         await this.plugin.addToPinBoard(srcPath, destFile);
-        new import_obsidian2.Notice(`Pinned to "${destFile.name.replace(/\.md$/i, "")}"`);
+        new import_obsidian3.Notice(t("notice.pinned", { name: destFile.name.replace(/\.md$/i, "") }));
         return;
       }
     }
-    if (destFile instanceof import_obsidian2.TFolder) {
+    if (destFile instanceof import_obsidian3.TFolder) {
       const srcName = srcPath.split("/").pop();
       if (!srcName)
         return;
@@ -1087,7 +1681,7 @@ var MasonryView = class extends import_obsidian2.ItemView {
       try {
         await this.app.fileManager.renameFile(srcFile, `${destPath}/${srcName}`);
       } catch (e) {
-        new import_obsidian2.Notice("Move failed");
+        new import_obsidian3.Notice(t("notice.moveFailed"));
       }
     }
   }
@@ -1106,7 +1700,7 @@ var DEFAULT_SETTINGS = {
   noteCardFontSize: 14,
   folderCount: 8
 };
-var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
+var ObsidianMasonryPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this._openingBoard = false;
@@ -1118,7 +1712,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     this.app.workspace.onLayoutReady(() => this.updatePinBoardStyles());
     this.addCommand({
       id: "open-masonry-view",
-      name: "Open Masonry View for current folder",
+      name: t("cmd.openMasonryView"),
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile();
         if (file == null ? void 0 : file.parent) {
@@ -1131,7 +1725,7 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     });
     this.addCommand({
       id: "toggle-masonry-folder",
-      name: "Toggle masonry view for current folder",
+      name: t("cmd.toggleMasonryFolder"),
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile();
         if (file == null ? void 0 : file.parent) {
@@ -1159,21 +1753,21 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     );
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
-        if (file instanceof import_obsidian3.TFolder) {
+        if (file instanceof import_obsidian4.TFolder) {
           const isEnabled = this.settings.masonryFolders.includes(file.path);
           menu.addItem((item) => {
-            item.setTitle(isEnabled ? "Disable Masonry View" : "Enable Masonry View").setIcon("grid").onClick(async () => await this.toggleMasonryFolder(file.path));
+            item.setTitle(isEnabled ? t("menu.disableMasonry") : t("menu.enableMasonry")).setIcon("grid").onClick(async () => await this.toggleMasonryFolder(file.path));
           });
           menu.addItem((item) => {
-            item.setTitle("Open in Masonry View").setIcon("grid-3x3").onClick(async () => await this.openMasonryView(file.path));
+            item.setTitle(t("menu.openMasonry")).setIcon("grid-3x3").onClick(async () => await this.openMasonryView(file.path));
           });
           menu.addSeparator();
           menu.addItem((item) => {
-            item.setTitle("Create Pin Board here").setIcon("pin").onClick(async () => {
+            item.setTitle(t("menu.createPinBoard")).setIcon("pin").onClick(async () => {
               const name = file.name + " Board";
               const board = await this.createPinBoard(name, file.path);
               if (board) {
-                new import_obsidian3.Notice(`Pin board "${name}" created`);
+                new import_obsidian4.Notice(t("notice.boardCreated", { name }));
                 this._openingBoard = true;
                 await this.openMasonryView(board.path);
                 window.setTimeout(() => {
@@ -1183,9 +1777,9 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
             });
           });
         }
-        if (file instanceof import_obsidian3.TFile) {
+        if (file instanceof import_obsidian4.TFile) {
           menu.addItem((item) => {
-            item.setTitle("Pin to board").setIcon("pin").onClick(async () => {
+            item.setTitle(t("menu.pinToBoard")).setIcon("pin").onClick(async () => {
               const boards = this.getPinBoards();
               new PinSelectModal(this.app, this, boards, [file.path]).open();
             });
@@ -1248,10 +1842,10 @@ var ObsidianMasonryPlugin = class extends import_obsidian3.Plugin {
     const idx = this.settings.masonryFolders.indexOf(path);
     if (idx > -1) {
       this.settings.masonryFolders.splice(idx, 1);
-      new import_obsidian3.Notice(`Masonry View disabled for "${path}"`);
+      new import_obsidian4.Notice(t("notice.masonryDisabled", { path }));
     } else {
       this.settings.masonryFolders.push(path);
-      new import_obsidian3.Notice(`Masonry View enabled for "${path}"`);
+      new import_obsidian4.Notice(t("notice.masonryEnabled", { path }));
     }
     await this.saveSettings();
     this.updatePinBoardStyles();
@@ -1311,7 +1905,7 @@ Your pinned items will appear here.
       this.updatePinBoardStyles();
       return file;
     } catch (e) {
-      new import_obsidian3.Notice("Failed to create pin board");
+      new import_obsidian4.Notice(t("notice.createBoardFailed"));
       return null;
     }
   }
@@ -1510,7 +2104,7 @@ Your pinned items will appear here.
       this.settings.fileTags[filePath] = [...tags];
     }
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file instanceof import_obsidian3.TFile && file.extension === "md") {
+    if (file instanceof import_obsidian4.TFile && file.extension === "md") {
       try {
         await this.app.fileManager.processFrontMatter(file, (fm) => {
           const data = fm;
@@ -1522,63 +2116,97 @@ Your pinned items will appear here.
     await this.saveSettings();
   }
 };
-var MasonrySettingTab = class extends import_obsidian3.PluginSettingTab {
+var MasonrySettingTab = class extends import_obsidian4.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
-  getControlValue(key) {
-    return this.plugin.settings[key];
-  }
-  setControlValue(key, value) {
-    this.plugin.settings[key] = value;
-    void this.plugin.saveSettings();
-    this.refreshMasonryViews();
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    new import_obsidian4.Setting(containerEl).setName(t("sett.heading")).setDesc(t("sett.desc")).setHeading();
+    new import_obsidian4.Setting(containerEl).setName(t("sett.showNames")).setDesc(t("sett.showNamesDesc")).addToggle((c) => c.setValue(this.plugin.settings.showFileNames).onChange(async (v) => {
+      this.plugin.settings.showFileNames = v;
+      await this.plugin.saveSettings();
+      this.refreshMasonryViews();
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.showTags")).setDesc(t("sett.showTagsDesc")).addToggle((c) => c.setValue(this.plugin.settings.showTags).onChange(async (v) => {
+      this.plugin.settings.showTags = v;
+      await this.plugin.saveSettings();
+      this.refreshMasonryViews();
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.gap")).setDesc(t("sett.gapDesc")).addText((c) => c.setValue(String(this.plugin.settings.itemGap)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.itemGap = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.columns")).setDesc(t("sett.columnsDesc")).addText((c) => c.setValue(String(this.plugin.settings.columnCount)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.columnCount = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.noteMinH")).setDesc(t("sett.noteMinHDesc")).addText((c) => c.setValue(String(this.plugin.settings.noteCardMinHeight)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.noteCardMinHeight = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.noteMaxH")).setDesc(t("sett.noteMaxHDesc")).addText((c) => c.setValue(String(this.plugin.settings.noteCardMaxHeight)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.noteCardMaxHeight = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.noteFontSize")).setDesc(t("sett.noteFontSizeDesc")).addText((c) => c.setValue(String(this.plugin.settings.noteCardFontSize)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.noteCardFontSize = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    new import_obsidian4.Setting(containerEl).setName(t("sett.folderCount")).setDesc(t("sett.folderCountDesc")).addText((c) => c.setValue(String(this.plugin.settings.folderCount)).onChange(async (v) => {
+      const n = parseInt(v, 10);
+      if (!isNaN(n)) {
+        this.plugin.settings.folderCount = n;
+        await this.plugin.saveSettings();
+        this.refreshMasonryViews();
+      }
+    }));
+    const folderSettings = new import_obsidian4.Setting(containerEl).setName(t("sett.masonryFolders"));
+    const el = folderSettings.controlEl;
+    const list = el.createEl("ul");
+    if (this.plugin.settings.masonryFolders.length === 0) {
+      list.createEl("li", { text: t("sett.none") });
+    } else {
+      for (const p of this.plugin.settings.masonryFolders) {
+        list.createEl("li", { text: p });
+      }
+    }
+    el.createEl("hr");
+    new import_obsidian4.Setting(el).setName(t("sett.clearAssignments")).setDesc(t("sett.clearAssignmentsDesc")).addButton(
+      (btn) => btn.setButtonText(t("sett.clearBtn")).setDestructive().onClick(async () => {
+        this.plugin.settings.masonryFolders = [];
+        await this.plugin.saveSettings();
+        this.display();
+        new import_obsidian4.Notice(t("notice.settingsCleared"));
+      })
+    );
   }
   refreshMasonryViews() {
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_MASONRY)) {
       if (leaf.view instanceof MasonryView)
         leaf.view.render();
     }
-  }
-  getSettingDefinitions() {
-    return [
-      {
-        name: "Masonry View",
-        desc: 'Right-click a folder and choose "Open in Masonry View" to browse in Pinterest-like layout.'
-      },
-      { name: "Show file names under items", desc: "Display the filename below each masonry card", control: { type: "toggle", key: "showFileNames" } },
-      { name: "Show tags under items", desc: "Display tags below each masonry card", control: { type: "toggle", key: "showTags" } },
-      { name: "Gap between items", desc: "Spacing between cards in pixels", control: { type: "number", key: "itemGap" } },
-      { name: "Column count", desc: "Number of masonry columns", control: { type: "number", key: "columnCount" } },
-      { name: "Note card min height", desc: "Minimum card height for notes (px)", control: { type: "number", key: "noteCardMinHeight" } },
-      { name: "Note card max height", desc: "Maximum card height for notes (px) \u2014 content exceeding this is clipped", control: { type: "number", key: "noteCardMaxHeight" } },
-      { name: "Note card font size", desc: "Font size for the note preview text (px)", control: { type: "number", key: "noteCardFontSize" } },
-      { name: "Folders per row", desc: "Number of folder cards in a single row", control: { type: "number", key: "folderCount" } },
-      {
-        name: "Masonry-enabled folders",
-        render: (setting) => {
-          const el = setting.controlEl;
-          el.empty();
-          const list = el.createEl("ul");
-          if (this.plugin.settings.masonryFolders.length === 0) {
-            list.createEl("li", { text: "None" });
-          } else {
-            for (const p of this.plugin.settings.masonryFolders) {
-              list.createEl("li", { text: p });
-            }
-          }
-          el.createEl("hr");
-          new import_obsidian3.Setting(el).setName("Clear all folder assignments").setDesc("Remove masonry view from all folders").addButton(
-            (btn) => btn.setButtonText("Clear All").setDestructive().onClick(async () => {
-              this.plugin.settings.masonryFolders = [];
-              await this.plugin.saveSettings();
-              this.update();
-              new import_obsidian3.Notice("Cleared all masonry folder settings");
-            })
-          );
-        }
-      }
-    ];
   }
 };
