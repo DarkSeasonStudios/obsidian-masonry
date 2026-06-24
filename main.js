@@ -317,7 +317,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
       this.dragStartY = e.clientY;
       this.dragTransX = this.translateX;
       this.dragTransY = this.translateY;
-      this.imgContainer.style.cursor = "grabbing";
+      this.imgContainer.addClass("masonry-iv-grabbing");
     };
     this._onMouseMove = (e) => {
       if (!this.isDragging)
@@ -331,7 +331,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
       if (e.button !== 2 || !this.isDragging)
         return;
       this.isDragging = false;
-      this.imgContainer.style.cursor = "";
+      this.imgContainer.removeClass("masonry-iv-grabbing");
     };
     this.plugin = plugin;
     this.images = images;
@@ -347,22 +347,12 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     contentEl.addClass("masonry-image-viewer");
     contentEl.empty();
     this.modalEl.addClass("masonry-image-modal");
-    this.modalEl.style.width = "96vw";
-    this.modalEl.style.height = "96vh";
-    this.modalEl.style.maxWidth = "none";
     this.imgContainer = contentEl.createDiv({ cls: "masonry-iv-container" });
-    this.imgContainer.style.position = "relative";
-    this.imgEls[0] = this.imgContainer.createEl("img", { cls: "masonry-iv-img" });
-    this.imgEls[1] = this.imgContainer.createEl("img", { cls: "masonry-iv-img" });
+    this.imgEls[0] = this.imgContainer.createEl("img", { cls: "masonry-iv-img masonry-iv-img-active" });
+    this.imgEls[1] = this.imgContainer.createEl("img", { cls: "masonry-iv-img masonry-iv-img-hidden" });
     for (const el of this.imgEls) {
-      el.style.position = "absolute";
-      el.style.inset = "0";
-      el.style.pointerEvents = "none";
-      el.style.transition = "opacity 0.2s ease";
       el.addEventListener("load", this._onImgLoad);
     }
-    this.imgEls[0].style.pointerEvents = "auto";
-    this.imgEls[1].style.opacity = "0";
     this.leftNav = contentEl.createDiv({ cls: "masonry-iv-nav masonry-iv-nav-left" });
     this.leftNav.setText("\u2039");
     this.leftNav.addEventListener("click", () => this.nav(-1));
@@ -406,7 +396,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
         e.preventDefault();
         const val = this._tagInputEl.value.trim();
         if (val)
-          this._addTag(val);
+          void this._addTag(val);
       }
     });
     (_a = this.scope) == null ? void 0 : _a.register([], "ArrowLeft", () => {
@@ -424,36 +414,30 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     this.imgContainer.addEventListener("wheel", this._onWheel, { passive: false });
     this.imgContainer.addEventListener("mousedown", this._onMouseDown);
     this.imgContainer.addEventListener("contextmenu", (e) => e.preventDefault());
-    document.addEventListener("mousemove", this._onMouseMove);
-    document.addEventListener("mouseup", this._onMouseUp);
+    activeDocument.addEventListener("mousemove", this._onMouseMove);
+    activeDocument.addEventListener("mouseup", this._onMouseUp);
     this.show(this.curIdx);
-    requestAnimationFrame(() => {
-      this.modalEl.style.transition = "opacity 0.3s ease";
-      this.modalEl.style.opacity = "1";
+    window.requestAnimationFrame(() => {
+      this.modalEl.addClass("masonry-iv-visible");
       const bg = this.modalEl.previousElementSibling;
-      if (bg) {
-        bg.style.transition = "opacity 0.3s ease";
-        bg.style.opacity = "1";
-      }
+      if (bg)
+        bg.addClass("masonry-iv-bg-visible");
     });
   }
   close() {
-    this.modalEl.style.transition = "opacity 0.3s ease";
-    this.modalEl.style.opacity = "0";
+    this.modalEl.removeClass("masonry-iv-visible");
     const bg = this.modalEl.previousElementSibling;
-    if (bg) {
-      bg.style.transition = "opacity 0.3s ease";
-      bg.style.opacity = "0";
-    }
+    if (bg)
+      bg.removeClass("masonry-iv-bg-visible");
     window.setTimeout(() => super.close(), 300);
   }
   onClose() {
     if (this._animId !== null)
       cancelAnimationFrame(this._animId);
     if (this._navTimer !== null)
-      clearTimeout(this._navTimer);
-    document.removeEventListener("mousemove", this._onMouseMove);
-    document.removeEventListener("mouseup", this._onMouseUp);
+      window.clearTimeout(this._navTimer);
+    activeDocument.removeEventListener("mousemove", this._onMouseMove);
+    activeDocument.removeEventListener("mouseup", this._onMouseUp);
     this.contentEl.empty();
   }
   _updateFitScale(img) {
@@ -476,7 +460,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     this.fitToWindow = false;
     this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
     this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
-    this._imgEl.style.objectFit = "";
+    this._imgEl.style.removeProperty("object-fit");
     this._targetScale = 1;
     this._targetTranslateX = 0;
     this._targetTranslateY = 0;
@@ -491,9 +475,9 @@ var ImageViewModal = class extends import_obsidian2.Modal {
   _toggleFitToWindow() {
     this.fitToWindow = !this.fitToWindow;
     if (this.fitToWindow) {
-      this._imgEl.style.objectFit = "";
-      this._imgEl.style.width = "";
-      this._imgEl.style.height = "";
+      this._imgEl.style.removeProperty("object-fit");
+      this._imgEl.style.removeProperty("width");
+      this._imgEl.style.removeProperty("height");
       this._targetScale = 1;
       this._targetTranslateX = 0;
       this._targetTranslateY = 0;
@@ -501,7 +485,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     } else {
       this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
       this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
-      this._imgEl.style.objectFit = "";
+      this._imgEl.style.removeProperty("object-fit");
       this.fitScale = 1;
       this._targetScale = 1;
       this._targetTranslateX = 0;
@@ -518,7 +502,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
       const del = chip.createSpan({ cls: "masonry-chip-x", text: "\xD7" });
       del.addEventListener("click", (e) => {
         e.stopPropagation();
-        this._removeTag(tag);
+        void this._removeTag(tag);
       });
     }
   }
@@ -549,8 +533,10 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     if (!file || !(file instanceof import_obsidian2.TFile))
       return;
     try {
-      const fullPath = this.app.vault.adapter.getFullPath(file.path);
-      window.require("electron").shell.showItemInFolder(fullPath);
+      const adapter = this.app.vault.adapter;
+      const fullPath = adapter.getFullPath(file.path);
+      const electron = window.require("electron");
+      electron.shell.showItemInFolder(fullPath);
     } catch (e) {
       console.error("Failed to open in explorer", e);
     }
@@ -582,7 +568,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
   _startAnim() {
     if (this._animId !== null)
       return;
-    this._animId = requestAnimationFrame(() => this._animate());
+    this._animId = window.requestAnimationFrame(() => this._animate());
   }
   _animate() {
     const lerpSpeed = this.isDragging ? 0.35 : 0.18;
@@ -598,7 +584,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
       this._applyTransform();
       this._animId = null;
     } else {
-      this._animId = requestAnimationFrame(() => this._animate());
+      this._animId = window.requestAnimationFrame(() => this._animate());
     }
   }
   _resetZoom() {
@@ -626,7 +612,7 @@ var ImageViewModal = class extends import_obsidian2.Modal {
       return;
     this._currentPath = item.path;
     if (this._navTimer !== null) {
-      clearTimeout(this._navTimer);
+      window.clearTimeout(this._navTimer);
       this._navTimer = null;
     }
     if (this._initialShow) {
@@ -651,27 +637,26 @@ var ImageViewModal = class extends import_obsidian2.Modal {
     next.setAttr("src", this.app.vault.getResourcePath(file));
     this.leftNav.toggleClass("masonry-iv-hidden", idx === 0);
     this.rightNav.toggleClass("masonry-iv-hidden", idx === this.images.length - 1);
-    prev.style.opacity = "0";
-    next.style.opacity = "1";
-    next.style.pointerEvents = "auto";
-    prev.style.pointerEvents = "none";
+    prev.addClass("masonry-iv-img-hidden");
+    prev.removeClass("masonry-iv-img-active");
+    next.removeClass("masonry-iv-img-hidden");
+    next.addClass("masonry-iv-img-active");
     this._activeIdx = nextIdx;
     this._renderTags();
     const textEls = [this.nameEl, this.dimsEl, this.zoomEl];
     for (const el of textEls) {
-      el.style.transition = "opacity 0.08s ease";
-      el.style.opacity = "0";
+      el.addClass("masonry-iv-text-fadeout");
     }
     this._navTimer = window.setTimeout(() => {
       this.nameEl.setText(item.name);
       for (const el of textEls) {
-        el.style.transition = "opacity 0.12s ease";
-        el.style.opacity = "1";
+        el.removeClass("masonry-iv-text-fadeout");
+        el.addClass("masonry-iv-text-fadein");
       }
       this._navTimer = window.setTimeout(() => {
         this._navTimer = null;
         for (const el of textEls)
-          el.style.transition = "";
+          el.removeClass("masonry-iv-text-fadein");
       }, 120);
     }, 80);
   }
@@ -2198,7 +2183,8 @@ var MasonrySettingTab = class extends import_obsidian4.PluginSettingTab {
       (btn) => btn.setButtonText(t("sett.clearBtn")).setDestructive().onClick(async () => {
         this.plugin.settings.masonryFolders = [];
         await this.plugin.saveSettings();
-        this.display();
+        list.empty();
+        list.createEl("li", { text: t("sett.none") });
         new import_obsidian4.Notice(t("notice.settingsCleared"));
       })
     );

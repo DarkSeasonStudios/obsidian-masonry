@@ -545,7 +545,8 @@ class MasonrySettingTab extends PluginSettingTab {
 				btn.setButtonText(t('sett.clearBtn')).setDestructive().onClick(async () => {
 					this.plugin.settings.masonryFolders = [];
 					await this.plugin.saveSettings();
-					this.display();
+					list.empty();
+					list.createEl('li', { text: t('sett.none') });
 					new Notice(t('notice.settingsCleared'));
 				})
 			);

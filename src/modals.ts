@@ -121,24 +121,14 @@ export class ImageViewModal extends Modal {
 		contentEl.empty();
 
 		this.modalEl.addClass('masonry-image-modal');
-		this.modalEl.style.width = '96vw';
-		this.modalEl.style.height = '96vh';
-		this.modalEl.style.maxWidth = 'none';
 
 		this.imgContainer = contentEl.createDiv({ cls: 'masonry-iv-container' });
 
-		this.imgContainer.style.position = 'relative';
-		this.imgEls[0] = this.imgContainer.createEl('img', { cls: 'masonry-iv-img' });
-		this.imgEls[1] = this.imgContainer.createEl('img', { cls: 'masonry-iv-img' });
+		this.imgEls[0] = this.imgContainer.createEl('img', { cls: 'masonry-iv-img masonry-iv-img-active' });
+		this.imgEls[1] = this.imgContainer.createEl('img', { cls: 'masonry-iv-img masonry-iv-img-hidden' });
 		for (const el of this.imgEls) {
-			el.style.position = 'absolute';
-			el.style.inset = '0';
-			el.style.pointerEvents = 'none';
-			el.style.transition = 'opacity 0.2s ease';
 			el.addEventListener('load', this._onImgLoad);
 		}
-		this.imgEls[0].style.pointerEvents = 'auto';
-		this.imgEls[1].style.opacity = '0';
 
 		this.leftNav = contentEl.createDiv({ cls: 'masonry-iv-nav masonry-iv-nav-left' });
 		this.leftNav.setText('‹');
@@ -186,7 +176,7 @@ export class ImageViewModal extends Modal {
 			if (e.key === 'Enter') {
 				e.preventDefault();
 				const val = this._tagInputEl.value.trim();
-				if (val) this._addTag(val);
+				if (val) void this._addTag(val);
 			}
 		});
 
@@ -197,38 +187,30 @@ export class ImageViewModal extends Modal {
 		this.imgContainer.addEventListener('wheel', this._onWheel, { passive: false });
 		this.imgContainer.addEventListener('mousedown', this._onMouseDown);
 		this.imgContainer.addEventListener('contextmenu', (e) => e.preventDefault());
-		document.addEventListener('mousemove', this._onMouseMove);
-		document.addEventListener('mouseup', this._onMouseUp);
+		activeDocument.addEventListener('mousemove', this._onMouseMove);
+		activeDocument.addEventListener('mouseup', this._onMouseUp);
 
 		this.show(this.curIdx);
 
-		requestAnimationFrame(() => {
-			this.modalEl.style.transition = 'opacity 0.3s ease';
-			this.modalEl.style.opacity = '1';
+		window.requestAnimationFrame(() => {
+			this.modalEl.addClass('masonry-iv-visible');
 			const bg = this.modalEl.previousElementSibling as HTMLElement | null;
-			if (bg) {
-				bg.style.transition = 'opacity 0.3s ease';
-				bg.style.opacity = '1';
-			}
+			if (bg) bg.addClass('masonry-iv-bg-visible');
 		});
 	}
 
 	close(): void {
-		this.modalEl.style.transition = 'opacity 0.3s ease';
-		this.modalEl.style.opacity = '0';
+		this.modalEl.removeClass('masonry-iv-visible');
 		const bg = this.modalEl.previousElementSibling as HTMLElement | null;
-		if (bg) {
-			bg.style.transition = 'opacity 0.3s ease';
-			bg.style.opacity = '0';
-		}
+		if (bg) bg.removeClass('masonry-iv-bg-visible');
 		window.setTimeout(() => super.close(), 300);
 	}
 
 	onClose() {
 		if (this._animId !== null) cancelAnimationFrame(this._animId);
-		if (this._navTimer !== null) clearTimeout(this._navTimer);
-		document.removeEventListener('mousemove', this._onMouseMove);
-		document.removeEventListener('mouseup', this._onMouseUp);
+		if (this._navTimer !== null) window.clearTimeout(this._navTimer);
+		activeDocument.removeEventListener('mousemove', this._onMouseMove);
+		activeDocument.removeEventListener('mouseup', this._onMouseUp);
 		this.contentEl.empty();
 	}
 
@@ -304,7 +286,7 @@ export class ImageViewModal extends Modal {
 		this.fitToWindow = false;
 		this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
 		this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
-		this._imgEl.style.objectFit = '';
+		this._imgEl.style.removeProperty('object-fit');
 		this._targetScale = 1;
 		this._targetTranslateX = 0;
 		this._targetTranslateY = 0;
@@ -321,9 +303,9 @@ export class ImageViewModal extends Modal {
 	private _toggleFitToWindow() {
 		this.fitToWindow = !this.fitToWindow;
 		if (this.fitToWindow) {
-			this._imgEl.style.objectFit = '';
-			this._imgEl.style.width = '';
-			this._imgEl.style.height = '';
+			this._imgEl.style.removeProperty('object-fit');
+			this._imgEl.style.removeProperty('width');
+			this._imgEl.style.removeProperty('height');
 			this._targetScale = 1;
 			this._targetTranslateX = 0;
 			this._targetTranslateY = 0;
@@ -331,7 +313,7 @@ export class ImageViewModal extends Modal {
 		} else {
 			this._imgEl.style.width = `${this._imgEl.naturalWidth}px`;
 			this._imgEl.style.height = `${this._imgEl.naturalHeight}px`;
-			this._imgEl.style.objectFit = '';
+			this._imgEl.style.removeProperty('object-fit');
 			this.fitScale = 1;
 			this._targetScale = 1;
 			this._targetTranslateX = 0;
@@ -349,7 +331,7 @@ export class ImageViewModal extends Modal {
 			const del = chip.createSpan({ cls: 'masonry-chip-x', text: '\u00D7' });
 			del.addEventListener('click', (e) => {
 				e.stopPropagation();
-				this._removeTag(tag);
+				void this._removeTag(tag);
 			});
 		}
 	}
@@ -383,8 +365,10 @@ export class ImageViewModal extends Modal {
 		const file = this.app.vault.getAbstractFileByPath(this._currentPath);
 		if (!file || !(file instanceof TFile)) return;
 		try {
-			const fullPath = (this.app.vault.adapter as any).getFullPath(file.path);
-			(window as any).require('electron').shell.showItemInFolder(fullPath);
+			const adapter = this.app.vault.adapter as unknown as { getFullPath(path: string): string };
+			const fullPath = adapter.getFullPath(file.path);
+			const electron = (window.require as unknown as (mod: string) => { shell: { showItemInFolder: (p: string) => void } })('electron');
+			electron.shell.showItemInFolder(fullPath);
 		} catch (e) {
 			console.error('Failed to open in explorer', e);
 		}
@@ -426,7 +410,7 @@ export class ImageViewModal extends Modal {
 		this.dragStartY = e.clientY;
 		this.dragTransX = this.translateX;
 		this.dragTransY = this.translateY;
-		this.imgContainer.style.cursor = 'grabbing';
+		this.imgContainer.addClass('masonry-iv-grabbing');
 	};
 
 	private _onMouseMove = (e: MouseEvent) => {
@@ -440,7 +424,7 @@ export class ImageViewModal extends Modal {
 	private _onMouseUp = (e: MouseEvent) => {
 		if (e.button !== 2 || !this.isDragging) return;
 		this.isDragging = false;
-		this.imgContainer.style.cursor = '';
+		this.imgContainer.removeClass('masonry-iv-grabbing');
 	};
 
 	private _applyTransform() {
@@ -450,7 +434,7 @@ export class ImageViewModal extends Modal {
 
 	private _startAnim() {
 		if (this._animId !== null) return;
-		this._animId = requestAnimationFrame(() => this._animate());
+		this._animId = window.requestAnimationFrame(() => this._animate());
 	}
 
 	private _animate() {
@@ -469,7 +453,7 @@ export class ImageViewModal extends Modal {
 			this._applyTransform();
 			this._animId = null;
 		} else {
-			this._animId = requestAnimationFrame(() => this._animate());
+		this._animId = window.requestAnimationFrame(() => this._animate());
 		}
 	}
 
@@ -499,7 +483,7 @@ export class ImageViewModal extends Modal {
 		this._currentPath = item.path;
 
 		if (this._navTimer !== null) {
-			clearTimeout(this._navTimer);
+			window.clearTimeout(this._navTimer);
 			this._navTimer = null;
 		}
 
@@ -532,10 +516,10 @@ export class ImageViewModal extends Modal {
 		this.rightNav.toggleClass('masonry-iv-hidden', idx === this.images.length - 1);
 
 		// Cross-fade images: prev fades out, next fades in
-		prev.style.opacity = '0';
-		next.style.opacity = '1';
-		next.style.pointerEvents = 'auto';
-		prev.style.pointerEvents = 'none';
+		prev.addClass('masonry-iv-img-hidden');
+		prev.removeClass('masonry-iv-img-active');
+		next.removeClass('masonry-iv-img-hidden');
+		next.addClass('masonry-iv-img-active');
 		this._activeIdx = nextIdx;
 
 		// Update tags immediately (no fade needed for chips)
@@ -544,19 +528,18 @@ export class ImageViewModal extends Modal {
 		// Text fade: fade out → update → fade in
 		const textEls = [this.nameEl, this.dimsEl, this.zoomEl];
 		for (const el of textEls) {
-			el.style.transition = 'opacity 0.08s ease';
-			el.style.opacity = '0';
+			el.addClass('masonry-iv-text-fadeout');
 		}
 
 		this._navTimer = window.setTimeout(() => {
 			this.nameEl.setText(item.name);
 			for (const el of textEls) {
-				el.style.transition = 'opacity 0.12s ease';
-				el.style.opacity = '1';
+				el.removeClass('masonry-iv-text-fadeout');
+				el.addClass('masonry-iv-text-fadein');
 			}
 			this._navTimer = window.setTimeout(() => {
 				this._navTimer = null;
-				for (const el of textEls) el.style.transition = '';
+				for (const el of textEls) el.removeClass('masonry-iv-text-fadein');
 			}, 120);
 		}, 80);
 	}
